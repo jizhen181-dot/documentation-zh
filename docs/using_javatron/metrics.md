@@ -15,7 +15,7 @@ node.metrics = {
 }
 ```
 
-Prometheus 监控默认关闭，启用后监听 `9527` 端口。
+Prometheus 监控默认关闭；启用后默认监听 `9527` 端口，可通过 `node.metrics.prometheus.port` 修改监听端口。
 
 有关 Prometheus 和旧版监控配置的详细说明，请参阅[事件订阅与监控](configuration.md#event-subscription-and-monitoring)。
 

@@ -177,7 +177,7 @@ P2P 消息限制独立配置在 `rate.limiter.p2p` 下。
 
 事件投递由 `event.subscribe` 控制。其配置用于选择原生队列或事件插件、插件路径或目标服务器，以及启用的触发器主题。完整配置请参阅[事件订阅](../architecture/event.md)。
 
-Prometheus 监控通过 `node.metrics.prometheus` 配置。该功能默认关闭，启用后监听 `9527` 端口：
+Prometheus 监控通过 `node.metrics.prometheus` 配置。该功能默认关闭；启用后默认监听 `9527` 端口，可通过 `node.metrics.prometheus.port` 修改监听端口：
 
 ```hocon
 node.metrics {
