@@ -1,0 +1,77 @@
+# wallet-cli witness update
+
+修改候选人信息页 URL。
+
+## 用法
+
+```
+wallet-cli witness update --url <url>
+                          [--dry-run | (--sign-only | --build-only) [--expiration <ms>] | --wait [--wait-timeout <ms>]]
+                          [--permission-id <n>] [options]
+```
+
+## 说明
+
+替换已有 SR 候选资格的信息页 URL。url 是链上为候选人保存的唯一字段，所以这就是“编辑”一个 SR 的全部内容。它可以按需任意次修改，只消耗带宽。
+
+执行操作的账户必须已经是候选人，否则命令会以 `not_a_witness` 失败。
+
+**该命令默认在提交时返回**（`stage: "submitted"`），而不是确认时——加 `--wait` 可阻塞直到已确认/失败。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+
+## 选项
+
+| 选项 | 说明 |
+|---|---|
+| `--url <url>` | **必填。** 新的候选人信息页 |
+| `--dry-run` | 只构建和估算，不签名/不广播；与 `--sign-only` / `--build-only` 互斥 |
+| `--sign-only` | 只签名不广播，输出已签名的 hex；与 `--dry-run` / `--build-only` 互斥；配合 `--expiration` 使用 |
+| `--build-only` | 只构建，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
+| `--expiration <ms>` | 交易过期时间（毫秒），最大 `86400000`（24 小时）；仅可与 `--sign-only` 或 `--build-only` 同用；省略时使用节点默认值（约 60 秒） |
+| `--permission-id <n>` | 用于签名的权限组（0=owner，1=witness，2-9=active）；默认 `0` |
+| `--wait` / `--wait-timeout <ms>` | 广播后轮询直到已确认/失败（上限默认取配置 `waitTimeoutMs`，内置 60000） |
+| `--password-stdin` | 从 stdin（fd 0）读取 master password |
+
+此外还有[全局选项](../index.md#global-options-every-command)。
+
+## 示例
+
+示例中的 `$PW` 是你的 master password（来自环境变量、密码管理器等），通过 `--password-stdin` 从 stdin 传入。
+
+```bash
+echo "$PW" | wallet-cli witness update --url https://sr.acme.io/v2 --network tron:nile --wait --password-stdin
+```
+
+```console
+✅ Witness updated
+  Witness  TSRmq8kP...9dEf (main)
+  Url      https://sr.acme.io/v2
+  TxID     e5b...
+  Block    57,881,190
+  Fee      0 TRX  (270 bandwidth)
+  Status   success
+```
+
+```bash
+echo "$PW" | wallet-cli witness update --url https://sr.acme.io/v2 --network tron:nile --wait --password-stdin -o json
+```
+
+```json
+{"schema":"wallet-cli.result.v1","success":true,"command":"witness.update","data":{"kind":"witness-update","stage":"confirmed","txId":"e5b...","confirmed":true,"blockNumber":57881190,"failed":false,"witnessAddress":"TSRmq8kP...","url":"https://sr.acme.io/v2","feeSun":0,"resource":{"netUsage":270,"netFeeSun":0,"energyUsage":0,"energyFeeSun":0}},"meta":{"durationMs":6440,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+```
+
+## 输出
+
+`data` 随阶段而变：
+
+| 阶段 | 字段 |
+|---|---|
+| 默认（提交） | `kind: "witness-update"`、`stage: "submitted"`、`txId`、`witnessAddress`、`url` |
+| `--wait`（已确认） | 同上，另加 `stage: "confirmed"`、`confirmed`（boolean）、`blockNumber`、`feeSun`、`resource`、`failed` |
+
+## 退出码
+
+`0` 已提交（早退模式下为已构建/已签名） · `1` 执行失败（`not_a_witness`、`watch_only_no_signer`、`auth_failed`） · `2` 用法错误（`missing_option`——未提供 `--url`）。
+
+## 另请参见
+
+[`witness create`](create.md) · [`witness set-brokerage`](set-brokerage.md) · [`vote list`](../vote/list.md) · [脚本安全](../../machine-interface.md#script-safety-never-mistake-submitted-for-confirmed)

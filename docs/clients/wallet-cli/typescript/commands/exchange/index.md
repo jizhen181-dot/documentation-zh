@@ -1,0 +1,44 @@
+# wallet-cli exchange
+
+TRON 协议层的 Bancor 交易所。
+
+交易对仅支持 **TRX 与 TRC10 之间**的兑换，不涉及 TRC20，并按照 Bancor 联合曲线即时结算，不使用
+订单簿、对手方或撮合机制。使用本组命令前，需要注意以下几点与常见自动做市商的区别：
+
+- **交易对专属于它的创建者。** 只有创建该交易对的账户才能对它注资或撤资，而且这层绑定无法转移。这里没有 LP token，也没有外部流动性提供者。
+- **任何人都可以交易。** 流动性管理仅限创建者，但交易本身对所有账户开放。
+- **协议不收取任何手续费。** `trade`、`inject` 和 `withdraw` 只消耗带宽；唯一要花钱的是 `create`，它会燃烧 `getExchangeCreateFee`。
+- **人类可读金额按节点提供的小数位换算。** 每个 `--amount` / `--amounts` /
+  `--min-received` 都会用节点报告的 TRC10 `precision` 换算成基本单位，也就是说，
+  这个值决定了你签名时的实际数量。它会按协议允许的 0..6 范围以及所请求的
+  token id 做校验，但落在该范围内的错误值本地无从发现。当精确的基本单位数量很重要时，
+  请改用 `--raw-*` 系列参数——它们会被原样使用。
+- **TRX 在链上的 token id 是下划线 `_`。** 可以写 `TRX`（大小写不限）或某个 asset id；`_` 也一样接受。json 展示的是真正上链的内容，因此 TRX 在其中显示为 `"_"`。
+
+**定价由曲线决定，而不是简单使用储备比例。** 两侧储备的比值只表示交易量趋近于零时的边际价格。
+实际交易会改变曲线位置，交易量相对储备越大，滑点通常越高。因此 [`exchange trade`](trade.md) 必须
+通过 `--min-received` 或 `--slippage` 设置最低接收量。要估算特定数量的兑换结果，请基于当前储备执行
+`exchange trade --dry-run`。储备量还受链参数 `getExchangeBalanceLimit` 限制。
+
+**本组命令只用 id 指代 token**——`TRX` 或数字形式的 asset id，绝不接受 token 名称。交易对用冒号书写（`--pair TRX:1000123`、`--amounts 10000:500000`），而 TRC10 名称本身合法地允许包含冒号，若允许写名称就会让 `--pair` 产生歧义。用 [`asset info <name>`](../asset/info.md) 把名称解析成 id。
+
+## 用法
+
+```
+wallet-cli exchange COMMAND
+```
+
+## 子命令
+
+| 命令 | 页面 | 说明 |
+|---|---|---|
+| `exchange create` | [create.md](create.md) | 创建交易对并为两侧注入初始资金 |
+| `exchange inject` | [inject.md](inject.md) | 按储备比例注资 |
+| `exchange withdraw` | [withdraw.md](withdraw.md) | 按储备比例撤资 |
+| `exchange trade` | [trade.md](trade.md) | 用一侧换取另一侧 |
+| `exchange show` | [show.md](show.md) | 查看单个交易对的创建者、创建时间和储备 |
+| `exchange list` | [list.md](list.md) | 列出链上所有交易对 |
+
+## 另请参见
+
+[`asset`](../asset/index.md) · [`tx send`](../tx/send.md) · [`chain params`](../chain/params.md)
