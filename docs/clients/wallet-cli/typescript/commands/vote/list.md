@@ -10,11 +10,11 @@ wallet-cli vote list [--limit <n>] [--candidates] [options]
 
 ## 说明
 
-列出 SR（默认是当选的 27 位）及其得票数、预估 APR 和分成比例——这些正是执行 [`vote cast`](cast.md) 之前需要看的数字。只读，不需要账户。
+列出 SR（默认显示当选的 27 位）及其得票数和奖励分配比例，供执行 [`vote cast`](cast.md) 前参考。该命令只读，不需要账户。
 
 各列的含义：
 
-- **APR**——投票者的预估年化收益，已按该 SR 的分成比例折算过。**尽力而为**：它不来自链上 RPC，而是取自区块浏览器/TronGrid 的数据；取不到时该列显示 `—`（json 中为 `null`）。
+- **APR**——为将来的估算数据源预留。当前实现并不去查询任何数据源，因此该列始终显示 `—`，json 中始终返回 `null`。
 - **Reward ratio（奖励分配比例）**——SR 分配给投票者的奖励占比，数据来自链上。80% 表示投票者获得
   奖励的 80%；**0% 表示投票者不会获得奖励**。JSON 中还提供链上原始的 `brokeragePct`
  （= 100 − rewardRatioPct）。
@@ -32,23 +32,23 @@ wallet-cli vote list [--limit <n>] [--candidates] [options]
 ## 示例
 
 ```bash
-wallet-cli vote list --limit 3 --network tron:nile
+wallet-cli vote list --limit 3 --network tron:3448148188
 ```
 
 ```console
-| Rank | Name            | Votes         | APR  | Reward ratio | Address                            |
-| ---- | --------------- | ------------- | ---- | ------------ | ---------------------------------- |
-| 1    | TRONSCAN        | 1,203,456,789 | 4.8% | 80%          | TZ4UXDV5ZhNW7fb2AMSbgfAEZ7hWsnYS2g |
-| 2    | Binance Staking | 998,765,432   | 0%   | 0%           | TT5W8MPbYJih9R586kTszb4LoybzUvCYm2 |
-| 3    | JustLend        | 876,543,210   | 4.9% | 80%          | TWxkzUeAiKcFvzXvJEcaTQCQqCuMednAtN |
+| Rank | Name         | Votes         | APR | Reward ratio | Address                            |
+| ---- | ------------ | ------------- | --- | ------------ | ---------------------------------- |
+| 1    | tronscan.org | 1,203,456,789 | —   | 80%          | TZ4UXDV5ZhNW7fb2AMSbgfAEZ7hWsnYS2g |
+| 2    | binance.com  | 998,765,432   | —   | 0%           | TT5W8MPbYJih9R586kTszb4LoybzUvCYm2 |
+| 3    | justlend.org | 876,543,210   | —   | 80%          | TWxkzUeAiKcFvzXvJEcaTQCQqCuMednAtN |
 ```
 
 ```bash
-wallet-cli vote list --limit 3 --network tron:nile -o json
+wallet-cli vote list --limit 3 --network tron:3448148188 -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"vote.list","data":{"witnesses":[{"rank":1,"name":"TRONSCAN","address":"TZ4UXDV5ZhNW7fb2AMSbgfAEZ7hWsnYS2g","voteCount":"1203456789","rewardRatioPct":80,"brokeragePct":20,"aprPct":4.8}]},"meta":{"durationMs":40,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"vote.list","data":{"witnesses":[{"rank":1,"name":"tronscan.org","address":"TZ4UXDV5ZhNW7fb2AMSbgfAEZ7hWsnYS2g","voteCount":"1203456789","rewardRatioPct":80,"brokeragePct":20,"aprPct":null},{"rank":2,"name":"binance.com","address":"TT5W8MPbYJih9R586kTszb4LoybzUvCYm2","voteCount":"998765432","rewardRatioPct":0,"brokeragePct":100,"aprPct":null},{"rank":3,"name":"justlend.org","address":"TWxkzUeAiKcFvzXvJEcaTQCQqCuMednAtN","voteCount":"876543210","rewardRatioPct":80,"brokeragePct":20,"aprPct":null}]},"meta":{"durationMs":40,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出
@@ -58,12 +58,12 @@ wallet-cli vote list --limit 3 --network tron:nile -o json
 | 字段 | 类型 | 含义 |
 |---|---|---|
 | `rank` | number | 按得票数排的名次（1 = 得票最多） |
-| `name` | string | SR 名称 |
+| `name` | string | 由 SR 的 URL 推导出的主机名；无法取得时改用 URL 文本或地址 |
 | `address` | string | SR base58 address |
 | `voteCount` | string | 总得票数，原始整数 |
-| `rewardRatioPct` | number | 分给投票者的奖励百分比（来自链上） |
-| `brokeragePct` | number | SR 自留的佣金比例（= 100 − `rewardRatioPct`） |
-| `aprPct` | number \| null | 投票者的预估 APR；估算数据源不可用时为 `null` |
+| `rewardRatioPct` | number \| null | 分给投票者的奖励百分比；读不到 brokerage 时为 `null` |
+| `brokeragePct` | number \| null | SR 自留的佣金比例（= 100 − `rewardRatioPct`）；取不到时为 `null` |
+| `aprPct` | null | 预留字段；当前实现中恒为 `null` |
 
 ## 退出码
 

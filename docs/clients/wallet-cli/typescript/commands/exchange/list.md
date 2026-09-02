@@ -1,6 +1,6 @@
 # wallet-cli exchange list
 
-列出链上所有交易对。
+分页列出链上的交易对。
 
 ## 用法
 
@@ -14,15 +14,15 @@ wallet-cli exchange list [--limit <n>] [--offset <n>] [options]
 
 **`Pair` 按链上存储的顺序显示**，也就是创建者当初给出的顺序——TRX 不会被规范化到固定的某一侧，因此 `1000124:TRX` 和 `TRX:1000123` 两种形式都会出现。`Reserves` 中的两个数字也遵循同样的顺序。
 
-**这里的储备以最小单位计，而不是完整 token。** 本命令只发一次 RPC，因此没有各 token 的精度可用于换算；`exchange show` 会去取精度，并改为按完整 token 打印。于是同一个交易对在这里显示为 `6,672`，在那边则是 `66.72`。
+**这里的储备以最小单位计，而不是完整 token。** 本命令只发起一次 RPC 请求，因此不会额外查询各 token 的精度；`exchange show` 会读取精度并按完整 token 显示。于是同一个交易对在本命令中显示为 `6,672`，在 `exchange show` 中则为 `66.72`。
 
-分页在节点侧完成，而且**没有总数**：链上并不暴露交易对的数量。标题只报告它请求的那个窗口——`Exchanges (limit 3, offset 0)`——而不是 `showing 3 of N`，`meta.pagination.total` 恒为 `null`。想取到全部数据，就把 `--limit` 给得足够大。
+分页在节点侧完成，而且**没有总数**：链上并不暴露交易对的数量。标题只报告它请求的那个窗口——`Exchanges (limit 3, offset 0)`——而不是 `showing 3 of N`，`meta.pagination.total` 恒为 `null`。想取到全部数据，就用 `--offset` 一页页翻，直到返回的这一页不满为止：`--limit` 上限为 `1000`，超过会以 `invalid_value` 被拒绝。
 
 ## 选项
 
 | 选项 | 说明 |
 |---|---|
-| `--limit <number>` | 最多返回多少个交易对（默认 `10`） |
+| `--limit <number>` | 最多返回多少个交易对，1–1000（默认 `10`） |
 | `--offset <number>` | 分页偏移（默认 `0`） |
 
 此外还有[全局选项](../index.md#global-options-every-command)。
@@ -30,7 +30,7 @@ wallet-cli exchange list [--limit <n>] [--offset <n>] [options]
 ## 示例
 
 ```bash
-wallet-cli exchange list --limit 3 --network tron:nile
+wallet-cli exchange list --limit 3 --network tron:3448148188
 ```
 
 ```console
@@ -43,11 +43,11 @@ Exchanges (limit 3, offset 0)
 ```
 
 ```bash
-wallet-cli exchange list --limit 3 --network tron:nile -o json
+wallet-cli exchange list --limit 3 --network tron:3448148188 -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"exchange.list","data":{"kind":"exchange-list","exchanges":[{"exchangeId":14,"pair":"1000124:TRX","creatorAddress":"TBeta9mR...","firstTokenId":"1000124","firstTokenBalance":"2500000000000","secondTokenId":"_","secondTokenBalance":"50000000000"},{"exchangeId":13,"pair":"1000125:TRX","creatorAddress":"TAlpha7k...","firstTokenId":"1000125","firstTokenBalance":"16000000","secondTokenId":"_","secondTokenBalance":"8000000000"},{"exchangeId":12,"pair":"TRX:1000123","creatorAddress":"TQkXm4vN...","firstTokenId":"_","firstTokenBalance":"10000000000","secondTokenId":"1000123","secondTokenBalance":"500000000000"}]},"meta":{"durationMs":52,"warnings":[],"pagination":{"offset":0,"limit":3,"total":null}},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"exchange.list","data":{"kind":"exchange-list","exchanges":[{"exchangeId":14,"pair":"1000124:TRX","creatorAddress":"TBeta9mR...","firstTokenId":"1000124","firstTokenBalance":"2500000000000","secondTokenId":"_","secondTokenBalance":"50000000000"},{"exchangeId":13,"pair":"1000125:TRX","creatorAddress":"TAlpha7k...","firstTokenId":"1000125","firstTokenBalance":"16000000","secondTokenId":"_","secondTokenBalance":"8000000000"},{"exchangeId":12,"pair":"TRX:1000123","creatorAddress":"TQkXm4vN...","firstTokenId":"_","firstTokenBalance":"10000000000","secondTokenId":"1000123","secondTokenBalance":"500000000000"}]},"meta":{"durationMs":52,"warnings":[],"pagination":{"offset":0,"limit":3,"total":null}},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出

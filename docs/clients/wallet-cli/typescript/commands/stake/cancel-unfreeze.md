@@ -15,13 +15,15 @@ wallet-cli stake cancel-unfreeze [--dry-run | (--sign-only | --build-only) [--ex
 
 **该命令默认在提交时返回**；`--wait` 会阻塞直到已确认。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
 
+Ledger 的 TRON 应用无法对 `CancelAllUnfreezeV2` 签名。Ledger 账户可以做试运行或构建，但签名模式会在与设备交互之前就以 `ledger_unsupported` 失败。
+
 ## 选项
 
 | 选项 | 说明 |
 |---|---|
 | `--dry-run` | 只估算，不签名/不广播；与 `--sign-only` / `--build-only` 互斥 |
 | `--sign-only` | 只签名不广播，输出已签名的 hex；与 `--dry-run` / `--build-only` 互斥；配合 `--expiration` 使用 |
-| `--build-only` | 只构建，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
+| `--build-only` | 构建并估算，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
 | `--expiration <ms>` | 交易过期时间（毫秒），最大 `86400000`（24 小时）；仅可与 `--sign-only` 或 `--build-only` 同用；省略时使用节点默认值（约 60 秒） |
 | `--permission-id <n>` | 用于签名的权限组（0=owner，1=witness，2-9=active）；默认 `0` |
 | `--wait` / `--wait-timeout <ms>` | 广播后轮询直到已确认/失败（上限默认取配置 `waitTimeoutMs`，内置 60000） |
@@ -36,28 +38,28 @@ wallet-cli stake cancel-unfreeze [--dry-run | (--sign-only | --build-only) [--ex
 默认——返回**已提交**的回执：
 
 ```bash
-echo "$PW" | wallet-cli stake cancel-unfreeze --network tron:nile --password-stdin
+echo "$PW" | wallet-cli stake cancel-unfreeze --network tron:3448148188 --password-stdin
 ```
 
 ```console
 ⏳ Cancelled pending unstakes
   TxID    9ec...
   Status  pending — not yet on-chain
-! Track it: wallet-cli tx info --network tron:nile --txid 9ec...
+! Track it: wallet-cli tx info --network tron:3448148188 --txid 9ec...
 ```
 
 ```bash
-echo "$PW" | wallet-cli stake cancel-unfreeze --network tron:nile --password-stdin -o json
+echo "$PW" | wallet-cli stake cancel-unfreeze --network tron:3448148188 --password-stdin -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"stake.cancel-unfreeze","data":{"kind":"stake-cancel","stage":"submitted","txId":"9ec..."},"meta":{"durationMs":15,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"stake.cancel-unfreeze","data":{"kind":"stake-cancel","stage":"submitted","txId":"9ec..."},"meta":{"durationMs":15,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 加 `--wait` 可阻塞直到已确认：
 
 ```bash
-echo "$PW" | wallet-cli stake cancel-unfreeze --network tron:nile --wait --password-stdin
+echo "$PW" | wallet-cli stake cancel-unfreeze --network tron:3448148188 --wait --password-stdin
 ```
 
 ```console
@@ -79,7 +81,7 @@ echo "$PW" | wallet-cli stake cancel-unfreeze --network tron:nile --wait --passw
 
 ## 退出码
 
-`0` 已提交（早退模式下为已构建/已签名） · `1` 执行失败（`watch_only_no_signer`、`auth_failed`、`rpc_error`、`timeout`） · `2` 用法错误。
+`0` 已提交（早退模式下为已构建/已签名） · `1` 执行失败（`watch_only_no_signer`、`ledger_unsupported`、`auth_failed`、`rpc_error`、`timeout`） · `2` 用法错误。
 
 ## 另请参见
 

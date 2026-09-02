@@ -12,9 +12,9 @@ wallet-cli asset info (<asset> | --issuer <address>) [options]
 
 报告一个 token 的发行记录：发行方、总供应量、精度、ICO 比率与窗口、冻结批次、描述、URL，以及两项免费带宽限额。只读，不需要账户。
 
-有三种查法——按 id（全数字参数）、按名称，或按 `--issuer` 地址。`<asset>` 与 `--issuer` 必须且只能提供其一；两者都不给或都给会返回 `invalid_value`。由于一个账户终身只能发行一个 TRC10，按发行方查询只会有一个结果。
+可以通过三种方式查询：按 id（全数字参数）、按名称，或按 `--issuer` 地址。`<asset>` 与 `--issuer` 必须且只能提供其一；两者均未提供或同时提供时会返回 `invalid_value`。由于每个账户只能发行一个 TRC10，按发行方查询最多返回一个结果。
 
-链上不保证名称唯一。**匹配到多个 token 的名称是一个错误，而不是一个列表**——命令会以 `ambiguous_asset_name` 退出码 `1` 失败，并打印候选项，便于你改用 id 重跑。参见[下面的示例](#a-name-that-is-not-unique)。
+链上不保证名称唯一。如果名称匹配到多个 token，命令不会直接返回列表，而是以退出码 `1` 和错误码 `ambiguous_asset_name` 失败，同时打印候选项，便于改用 id 重新查询。参见[下面的示例](#a-name-that-is-not-unique)。
 
 空的小节会被整体省略：没有冻结批次的 token 完全不会显示 `Frozen` 块。
 
@@ -22,7 +22,7 @@ wallet-cli asset info (<asset> | --issuer <address>) [options]
 
 它是 [`token info`](../token/info.md) 在 TRC10 上的专用对应命令；后者报告与 TRC20 共有的通用元数据（名称、符号、精度），且只能用 `--asset-id` 选择 TRC10。
 
-这里没有"已售数量"、"剩余供应量"或持有人数：节点无法可靠地计算其中任何一项——从结果反推时，发行方的普通转账与 ICO 售出无法区分——所以一律不报告。要看发行方当前的持有量，请用 [`account balance`](../account/balance.md) 读取它的余额。
+输出不包含“已售数量”“剩余供应量”或持有人数，因为节点无法可靠计算这些数据：仅凭链上结果无法区分发行方的普通转账和 ICO 销售。要查看发行方当前持有量，请使用 [`account balance`](../account/balance.md) 查询其余额。
 
 ## 选项
 
@@ -35,10 +35,10 @@ wallet-cli asset info (<asset> | --issuer <address>) [options]
 
 ## 示例
 
-By id:
+按 id 查询：
 
 ```bash
-wallet-cli asset info 1000123 --network tron:nile
+wallet-cli asset info 1000123 --network tron:3448148188
 ```
 
 ```console
@@ -61,7 +61,7 @@ Asset MyToken (id 1000123)
 ### 名称不唯一的情况 {#a-name-that-is-not-unique}
 
 ```bash
-wallet-cli asset info MyToken --network tron:nile
+wallet-cli asset info MyToken --network tron:3448148188
 ```
 
 命令以退出码 `1` 失败；消息和候选表输出到 **stderr**：
@@ -79,7 +79,7 @@ error [ambiguous_asset_name]: 2 TRC10 tokens are named MyToken; re-run with the 
 按发行方查询——这里是别人的 token，且没有冻结批次：
 
 ```bash
-wallet-cli asset info --issuer TZx9kP2m...7bWq --network tron:nile
+wallet-cli asset info --issuer TZx9kP2m...7bWq --network tron:3448148188
 ```
 
 ```console
@@ -97,21 +97,21 @@ Asset MyToken (id 1000488)
 ```
 
 ```bash
-wallet-cli asset info 1000123 --network tron:nile -o json
+wallet-cli asset info 1000123 --network tron:3448148188 -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"asset.info","data":{"kind":"asset-info","assetId":"1000123","name":"MyToken","abbr":"MTK","issuerAddress":"TQkXm4vN...","totalSupply":"1000000000000000","precision":6,"price":"1:100","trxNum":1000000,"num":100000000,"startTime":1785542400000,"endTime":1788134400000,"url":"https://mytoken.io","description":"Demo TRC10","freeAssetNetLimit":0,"publicFreeAssetNetLimit":0,"frozenSupply":[{"amount":"100000000000000","days":30,"expireTime":1788134400000},{"amount":"50000000000000","days":90,"expireTime":1793318400000}]},"meta":{"durationMs":26,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"asset.info","data":{"kind":"asset-info","assetId":"1000123","name":"MyToken","abbr":"MTK","issuerAddress":"TQkXm4vN...","totalSupply":"1000000000000000","precision":6,"price":"1:100","trxNum":1,"num":100,"startTime":1785542400000,"endTime":1788134400000,"url":"https://mytoken.io","description":"Demo TRC10","freeAssetNetLimit":0,"publicFreeAssetNetLimit":0,"frozenSupply":[{"amount":"100000000000000","days":30,"expireTime":1788134400000},{"amount":"50000000000000","days":90,"expireTime":1793318400000}]},"meta":{"durationMs":26,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 名称歧义失败在 json 中的形式：
 
 ```bash
-wallet-cli asset info MyToken --network tron:nile -o json
+wallet-cli asset info MyToken --network tron:3448148188 -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":false,"command":"asset.info","error":{"code":"ambiguous_asset_name","message":"2 TRC10 tokens are named MyToken; re-run with the id","details":{"name":"MyToken","assetIds":["1000123","1000488"],"matches":[{"assetId":"1000123","issuerAddress":"TQkXm4vN...","totalSupply":"1000000000000000","precision":6},{"assetId":"1000488","issuerAddress":"TZx9kP2m...","totalSupply":"5000000000","precision":2}]}},"meta":{"durationMs":29,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":false,"command":"asset.info","error":{"code":"ambiguous_asset_name","message":"2 TRC10 tokens are named MyToken; re-run with the id","details":{"name":"MyToken","assetIds":["1000123","1000488"],"matches":[{"assetId":"1000123","issuerAddress":"TQkXm4vN...","totalSupply":"1000000000000000","precision":6},{"assetId":"1000488","issuerAddress":"TZx9kP2m...","totalSupply":"5000000000","precision":2}]}},"meta":{"durationMs":29,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出 {#output}
@@ -126,7 +126,7 @@ wallet-cli asset info MyToken --network tron:nile -o json
 | `totalSupply` | string | 总供应量，原始值（完整 token × 10^`precision`）。是**字符串**：供应量会达到 int64，作为 JSON number 会损失精度 |
 | `precision` | number | 小数位数，0–6 |
 | `price` | string | 发行比率，形如 `trx:tokens`，以完整单位计——text 渲染为 `1 TRX = 100 MyToken` |
-| `trxNum` / `num` | number | 与链上存储完全一致的比率，以 sun 和最小单位表示。当 `precision` 为 6 时，`1:100` 存储为 `1000000` / `100000000` |
+| `trxNum` / `num` | number | 与链上存储完全一致的比率，以 sun 和最小单位表示，并在发行时约分为最简形式。当 `precision` 为 6 时，`1:100` 存储为 `trxNum=1` / `num=100` |
 | `startTime` / `endTime` | number | ICO 窗口，epoch 以来的毫秒数 |
 | `url` / `description` | string | 项目页面和描述 |
 | `freeAssetNetLimit` / `publicFreeAssetNetLimit` | number | 每位持有人的免费带宽，以及共享池 |

@@ -26,7 +26,7 @@ wallet-cli proposal approve <id> [--cancel]
 | `--cancel` | 撤回你此前投出的批准，而不是新增一个 |
 | `--dry-run` | 只构建和估算，不签名/不广播；与 `--sign-only` / `--build-only` 互斥 |
 | `--sign-only` | 只签名不广播，输出已签名的 hex；与 `--dry-run` / `--build-only` 互斥；配合 `--expiration` 使用 |
-| `--build-only` | 只构建，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
+| `--build-only` | 构建并估算，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
 | `--expiration <ms>` | 交易过期时间（毫秒），最大 `86400000`（24 小时）；仅可与 `--sign-only` 或 `--build-only` 同用；省略时使用节点默认值（约 60 秒） |
 | `--permission-id <n>` | 用于签名的权限组（0=owner，1=witness，2-9=active）；默认 `0` |
 | `--wait` / `--wait-timeout <ms>` | 广播后轮询直到已确认/失败（上限默认取配置 `waitTimeoutMs`，内置 60000） |
@@ -39,7 +39,7 @@ wallet-cli proposal approve <id> [--cancel]
 示例中的 `$PW` 是你的 master password（来自环境变量、密码管理器等），通过 `--password-stdin` 从 stdin 传入。
 
 ```bash
-echo "$PW" | wallet-cli proposal approve 47 --network tron:nile --wait --password-stdin
+echo "$PW" | wallet-cli proposal approve 47 --network tron:3448148188 --wait --password-stdin
 ```
 
 ```console
@@ -56,7 +56,7 @@ echo "$PW" | wallet-cli proposal approve 47 --network tron:nile --wait --passwor
 `--cancel` 会把你自己的批准从提案上撤下来：
 
 ```bash
-echo "$PW" | wallet-cli proposal approve 47 --cancel --network tron:nile --wait --password-stdin
+echo "$PW" | wallet-cli proposal approve 47 --cancel --network tron:3448148188 --wait --password-stdin
 ```
 
 ```console
@@ -71,11 +71,11 @@ echo "$PW" | wallet-cli proposal approve 47 --cancel --network tron:nile --wait 
 ```
 
 ```bash
-echo "$PW" | wallet-cli proposal approve 47 --network tron:nile --wait --password-stdin -o json
+echo "$PW" | wallet-cli proposal approve 47 --network tron:3448148188 --wait --password-stdin -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"proposal.approve","data":{"kind":"proposal-approve","stage":"confirmed","txId":"b1e...","confirmed":true,"blockNumber":57880240,"failed":false,"proposalId":47,"addApproval":true,"feeSun":0,"resource":{"netUsage":267,"netFeeSun":0,"energyUsage":0,"energyFeeSun":0}},"meta":{"durationMs":6410,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"proposal.approve","data":{"kind":"proposal-approve","stage":"confirmed","txId":"b1e...","confirmed":true,"blockNumber":57880240,"failed":false,"proposalId":47,"voterAddress":"TSRmq8kP...","addApproval":true,"approvals":13,"approvalThreshold":18,"feeSun":0,"energyUsed":0,"netUsed":267,"energyFeeSun":0,"netFeeSun":0,"resource":{"netUsage":267,"netFeeSun":0,"energyUsage":0,"energyFeeSun":0}},"meta":{"durationMs":6410,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出
@@ -84,8 +84,8 @@ echo "$PW" | wallet-cli proposal approve 47 --network tron:nile --wait --passwor
 
 | 阶段 | 字段 |
 |---|---|
-| 默认（提交） | `kind: "proposal-approve"`, `stage: "submitted"`, `txId`, `proposalId`, `addApproval`（加 `--cancel` 时为 `false`） |
-| `--wait`（已确认） | 同上，另加 `stage: "confirmed"`、`confirmed`（boolean）、`blockNumber`、`feeSun`、`resource`、`failed` |
+| 默认（提交） | `kind: "proposal-approve"`、`stage: "submitted"`、`txId`、`proposalId`、`voterAddress`、`addApproval`（加 `--cancel` 时为 `false`）、`approvals`，以及 `approvalThreshold` |
+| `--wait`（已确认） | 同上，另加 `stage: "confirmed"`、`confirmed`（boolean）、`blockNumber`、返回时的扁平结算字段（`feeSun`、`energyUsed`、`netUsed`、`energyFeeSun`、`netFeeSun`）、它们面向治理命令的兼容视图 `resource`（`netUsage`、`netFeeSun`、`energyUsage`、`energyFeeSun`）、`failed` |
 
 ## 退出码
 

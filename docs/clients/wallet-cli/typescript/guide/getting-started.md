@@ -13,7 +13,7 @@ wallet-cli create --label main
 命令会提示设置 **master password**，用于加密本地保存的所有密钥材料。该密码无法找回，必须至少包含
 8 个字符，并同时包含大写字母、小写字母、数字和特殊字符。
 
-**提示——更推荐使用密码管理器。** 它能生成强度高且唯一的密码，并让密码不出现在 shell 历史、进程列表和明文文件中。任何带命令行工具的密码管理器都可以——这里的示例仅以 1Password 的 `op` 作为演示（先安装并登录——[文档](https://developer.1password.com/docs/cli/)）。把你选定的 master password 存为一个条目，然后读取它来创建钱包：
+**建议使用密码管理器。** 它可以生成高强度的唯一密码，并避免密码出现在 shell 历史、进程列表或明文文件中。任何提供命令行工具的密码管理器都可以；以下仅以 1Password 的 `op` 为例（请先安装并登录，参见[文档](https://developer.1password.com/docs/cli/)）。将 master password 保存为一个条目，然后读取它来创建钱包：
 
 ```bash
 op read "op://Private/wallet-cli/password" | wallet-cli create --label main --password-stdin
@@ -33,17 +33,30 @@ wallet-cli list
 
 ```console
 HD  wlt_4473p34m
-└─ [0] main        TMSgJxtPw29AFEHMXsjGo4kWV7UwbCToHJ  (active)
+└─ [0] main  TMSgJxtPw29AFEHMXsjGo4kWV7UwbCToHJ  (active)
 ```
 
-那串 `T…` 就是你的 TRON 地址，在所有网络上都相同。`(active)` 标记的是命令默认操作的账户；用 `wallet-cli use <label>` 切换。
+其中的 `T…` 是 TRON 地址，在所有 TRON 网络上都相同。`(active)` 表示命令默认使用的账户；可通过 `wallet-cli use <label>` 切换。
+
+你的账户还有一个**EVM 地址**，由同一份种子派生而来——`list` 一次只显示一个链家族，因此传 `--network` 才能看到另一个：
+
+```bash
+wallet-cli list --network sepolia
+```
+
+```console
+HD  wlt_4473p34m
+└─ [0] main  0x3f9A1C74E5B2d80Af6C31e97b45D2a08c7E6F193  (active)
+```
+
+这两个是互相独立的地址，余额也互相独立；给其中一个充值不会让另一个多出一分。下面所有内容在两边的用法完全一样——把 `--network tron:3448148188` 换成 `--network sepolia`，金额单位就从 TRX 变成 ETH。参见[网络](../concepts/networks.md)。
 
 ## 2. 领取测试 TRX
 
 打开 Nile 水龙头 [nileex.io/join/getJoinPage](https://nileex.io/join/getJoinPage)，找到 "Get 2000 test coins" 一节，粘贴你的 `T…` 地址，通过验证码并提交（每天一次；一分钟内到账）。然后确认已经到账：
 
 ```bash
-wallet-cli account balance --network tron:nile
+wallet-cli account balance --network tron:3448148188
 ```
 
 ```console
@@ -54,7 +67,7 @@ Balance  1976.489 TRX
 提示：把 Nile 设为默认网络，学习阶段就可以省略 `--network`：
 
 ```bash
-wallet-cli config defaultNetwork tron:nile
+wallet-cli config defaultNetwork tron:3448148188
 ```
 
 ## 3. 发送第一笔交易 {#3-send-your-first-transaction}
@@ -62,32 +75,34 @@ wallet-cli config defaultNetwork tron:nile
 发送交易需要通过 `--password-stdin` 从 stdin 传入 master password：
 
 ```bash
-printf '%s' "$MY_PASSWORD" | wallet-cli tx send --to TSx72ViULFepRGCS4PM5dP4FqD1d8qggCc --amount 1 --network tron:nile --password-stdin
+printf '%s' "$MY_PASSWORD" | wallet-cli tx send --to TSx72ViULFepRGCS4PM5dP4FqD1d8qggCc --amount 1 --network tron:3448148188 --password-stdin
 ```
 
 **提示——更推荐使用密码管理器**（第 1 步中已配置）。直接把密码从它管道传入：
 
 ```bash
-op read "op://Private/wallet-cli/password" | wallet-cli tx send --to TSx72ViULFepRGCS4PM5dP4FqD1d8qggCc --amount 1 --network tron:nile --password-stdin
+op read "op://Private/wallet-cli/password" | wallet-cli tx send --to TSx72ViULFepRGCS4PM5dP4FqD1d8qggCc --amount 1 --network tron:3448148188 --password-stdin
 ```
 
-交易会被签名并**提交**。提交不等于确认——查一下它到底走到哪一步了：
+交易会被签名并**提交**。提交不等于确认，请继续查询交易状态：
 
 ```bash
-wallet-cli tx status --txid <the txid you got back> --network tron:nile
+wallet-cli tx status --txid <the txid you got back> --network tron:3448148188
 ```
 
 ```console
-TxID    7d9b6a08505537f7fd51ed4fb4223ce89098403d26e8d3fe07bdb3d625a46364
-Status  confirmed ✅
+TxID           7d9b6a08505537f7fd51ed4fb4223ce89098403d26e8d3fe07bdb3d625a46364
+Status         confirmed ✅
+Block          #70,433,563
+Confirmations  1
 ```
 
-`pending` 表示再等等然后重跑；`failed` 表示链上拒绝了它（见[故障排查](../troubleshooting.md)）。想让 `tx send` 阻塞到确认为止，加上 `--wait`。
+`pending` 表示交易仍在处理中，应稍后再次查询；`failed` 表示交易已经入块，但链上执行失败（见[故障排查](../troubleshooting.md)）。想让 `tx send` 等待交易结果，请加上 `--wait`。
 
 对某笔交易没把握？先演练一次——`--dry-run` 只构建交易并估算费用，不签名也不广播：
 
 ```bash
-wallet-cli tx send --to TSx72ViULFepRGCS4PM5dP4FqD1d8qggCc --amount 1 --network tron:nile --dry-run
+wallet-cli tx send --to TSx72ViULFepRGCS4PM5dP4FqD1d8qggCc --amount 1 --network tron:3448148188 --dry-run
 ```
 
 ## 4. 接下来看什么
@@ -99,7 +114,7 @@ wallet-cli tx send --to TSx72ViULFepRGCS4PM5dP4FqD1d8qggCc --amount 1 --network 
 - 完整的交易详情和交易回执：[`tx info`](../commands/tx/info.md)
 - 你的历史记录和持仓：[`account history`](../commands/account/history.md)、[`account portfolio`](../commands/account/portfolio.md)
 - 把这些操作自动化：[脚本编写指南](scripting.md)
-- `tron:nile` / `tron:mainnet` 究竟是什么：[网络](../concepts/networks.md)
+- `tron:3448148188` / `eip155:11155111` 究竟是什么，以及哪些命令能在哪里运行：[网络](../concepts/networks.md)
 
 > **主网操作提示**：主网 TRX 具有真实价值。请仔细核对收款地址，并优先执行 `--dry-run`；交易一旦
 > 广播，发送方无法主动撤销，是否达到最终性仍取决于链上固化状态。

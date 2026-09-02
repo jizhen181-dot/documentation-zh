@@ -33,8 +33,8 @@
 
 ## ExchangeInject
 
-注资。进行注资时，会根据其数量（`quant`），按比例从账户中提取交易对中的每种 token 并注入交易对。
-由于交易余额存在差异，同一 token 的相同金额也会有所不同。
+向交易对注入流动性。`quant` 指定其中一种 token 的注入量，另一种 token 的注入量由交易对当前的
+储备比例计算；两种 token 都会从账户转入交易对。
 
 ```console
 > exchangeInject [OwnerAddress] exchange_id token_id quant
@@ -61,13 +61,12 @@
 > ExchangeTransaction 1 1000001 100 80
 ```
 
-期望在 ID 为 1 的交易对中，用数量为 100 的 1000001 兑换得到 80 TRX。（相当于在交易对 ID 为 1 中，
-以 80 TRX 的价格卖出数量为 100 的 tokenID 1000001。）
+该命令尝试在 ID 为 1 的交易对中卖出 100 个 ID 为 1000001 的 token，并至少获得 80 TRX。
 
 ## ExchangeWithdraw
 
-撤资。进行撤资时，会根据其数量（`quant`），按比例从交易对中提取每种 token 并注入账户。由于交易
-余额存在差异，同一 token 的相同金额也会有所不同。
+从交易对撤出流动性。`quant` 指定其中一种 token 的撤出量，另一种 token 的撤出量由交易对当前的
+储备比例计算；两种 token 都会从交易对转回账户。
 
 ```console
 > exchangeWithdraw [OwnerAddress] exchange_id token_id quant

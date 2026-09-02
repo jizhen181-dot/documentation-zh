@@ -23,7 +23,7 @@ git clone https://github.com/tronprotocol/wallet-cli.git
 
 ### 配置
 
-一份最小的 `config.conf` 只需要网络类型和一个可通信的 FullNode：
+一份最小的 `config.conf` 只需要网络类型和一个可连接的 FullNode：
 
 ```
 net {

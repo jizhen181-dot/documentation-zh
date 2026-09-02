@@ -42,7 +42,7 @@ SwitchNetwork  successful !!!
 
 ```console
 wallet> currentnetwork
-currentNetwork: NILE
+current network: NILE
 ```
 
 对于自定义网络，会显示节点端点：

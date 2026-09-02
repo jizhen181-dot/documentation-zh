@@ -7,7 +7,7 @@
 投票需要份额（share）。份额可以通过冻结资金获得。
 
 - 份额的计算方式是：每冻结 **1 TRX** 可获得 **1** 单位份额。
-- 解冻之后，此前的投票将失效。你可以通过重新冻结并投票来避免投票作废。
+- 解冻后，此前的投票会失效；如需恢复票数，需要重新冻结并再次投票。
 
 **注意** TRON 网络只记录你最后一次投票的状态，也就是说，你的每一次投票都会覆盖此前的全部投票
 结果。
@@ -15,20 +15,19 @@
 例如：
 
 ```console
-> freezeBalance 100000000 3 1 address  # 冻结 10TRX，获得 10 单位份额
+> freezeBalance 10000000 3 1  # 冻结 10 TRX，获得 10 单位份额
 
-> votewitness 123455 witness1 4 witness2 6  # 同时为 witness1 投 4 票、为 witness2 投 6 票
+> votewitness TJmka325yjJKeFpQDwKSQAoNwEyNGhsaEV 4 TFFLWM7tmKiwGtbh2mcz2rBssoFjHjSShG 6  # 同时为第一个 SR 投 4 票、为第二个 SR 投 6 票
 
-> votewitness 123455 witness1 10  # 为 witness1 投了 10 票
+> votewitness TJmka325yjJKeFpQDwKSQAoNwEyNGhsaEV 10  # 只为第一个 SR 投 10 票
 ```
 
-上述命令的最终结果是 witness1 得 10 票，witness2 得 0 票。
+每个超级代表都必须以 Base58Check 地址给出，不接受占位名称。上述命令的最终结果是 `TJmka325…` 得 10 票，`TFFLWM7t…` 得 0 票。
 
 ## 佣金比例（Brokerage） {#brokerage}
 
-为见证人投票后，你将获得奖励。见证人有权决定佣金比例。默认比例为 20%，见证人可以调整它。
-
-默认情况下，如果见证人获得奖励，他们将得到全部奖励的 20%，其余 80% 分配给他们的投票者。
+为见证人投票后，投票者可以获得奖励。见证人可以设置佣金比例，默认值为 20%；也就是说，见证人
+获得总奖励的 20%，其余 80% 分配给投票者。
 
 ### GetBrokerage
 
@@ -38,7 +37,7 @@
 > getbrokerage OwnerAddress
 ```
 
-`OwnerAddress`——见证人账户的地址，base58check 类型的地址。
+`OwnerAddress`——见证人账户的 Base58Check 地址。
 
 ### GetReward
 
@@ -48,7 +47,7 @@
 > getreward OwnerAddress
 ```
 
-`OwnerAddress`——投票者账户的地址，base58check 类型的地址。
+`OwnerAddress`——投票者账户的 Base58Check 地址。
 
 ### UpdateBrokerage
 
@@ -58,9 +57,9 @@
 > updateBrokerage OwnerAddress brokerage
 ```
 
-- `OwnerAddress`——见证人的账户地址，base58check 类型的地址。
-- `brokerage`——你想更新到的佣金比例，取值 0 到 100。如果输入 10，表示总奖励的 10% 分配给 SR，
-  其余部分奖励给所有投票者，在这个例子中即 90%。
+- `OwnerAddress`——见证人账户的 Base58Check 地址。
+- `brokerage`——新的佣金比例，取值范围为 0 到 100。例如，输入 10 表示 SR 获得总奖励的 10%，
+  其余 90% 分配给投票者。
 
 示例：
 
@@ -76,8 +75,8 @@
 
 提取投票奖励或出块奖励。
 
-每个区块产生后，出块奖励会发送到账户的 allowance，允许每 **24 小时**从 allowance 提取一次到
-balance。allowance 中的资金不能被锁定或交易。
+每个区块产生后，出块奖励会进入账户的 `allowance`；每 **24 小时**可以提取一次，将奖励转入
+`balance`。`allowance` 中的资金不能被锁定或交易。
 
 ```console
 > WithdrawBalance [owner_address]
@@ -89,7 +88,7 @@ balance。allowance 中的资金不能被锁定或交易。
 
 ## 如何创建见证人 {#how-to-create-witness}
 
-申请成为见证人账户需要消耗 **100_000 TRX**。这部分资金将被直接燃烧。
+注册为超级代表候选人需要消耗 **100_000 TRX**，这部分资金会被直接燃烧。
 
 ### CreateWitness
 
@@ -100,7 +99,7 @@ balance。allowance 中的资金不能被锁定或交易。
 ```
 
 ```console
-> CreateWitness TEDapYSVvAZ3aYH7w8N9tMEEFKaNKUD5Bp 007570646174654e616d6531353330363038383733343633
+> CreateWitness TEDapYSVvAZ3aYH7w8N9tMEEFKaNKUD5Bp https://sr.example.com
 ```
 
 ### UpdateWitness
@@ -108,12 +107,12 @@ balance。allowance 中的资金不能被锁定或交易。
 编辑 SR 官方网站的 URL。
 
 ```console
-> UpdateWitness TEDapYSVvAZ3aYH7w8N9tMEEFKaNKUD5Bp 007570646174654e616d6531353330363038383733343633
+> UpdateWitness TEDapYSVvAZ3aYH7w8N9tMEEFKaNKUD5Bp https://sr.example.com/v2
 ```
 
 ## ListWitnesses
 
-获取所有矿工节点信息。
+获取所有见证人节点的信息。
 
 ## GetPaginatedNowWitnessList
 

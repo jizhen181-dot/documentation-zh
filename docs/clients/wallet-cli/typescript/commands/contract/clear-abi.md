@@ -16,9 +16,13 @@ wallet-cli contract clear-abi <address>
 
 它**不会**动到的东西：`bytecode` 和合约状态都不受影响，合约照样可以像之前一样被调用。ABI 只是附带的元数据，并不参与执行。
 
+**仅限 TRON**——EVM 链上没有链上 ABI 可清除，该网络会以 `family_mismatch` 失败。
+
 只有合约的部署者才能执行此操作——即链上记录为该合约 `origin` 的地址，可在 [`contract info`](info.md) 中查看。其他账户会以 `not_contract_deployer` 失败。
 
 **该命令默认在提交时返回**（`stage: "submitted"`），而不是确认时——加 `--wait` 可阻塞直到已确认/失败。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+
+Ledger 的 TRON 应用无法解析这一治理类合约。Ledger 账户可以做试运行或构建，但签名模式会在与设备交互之前就以 `ledger_unsupported` 失败。
 
 ## 选项
 
@@ -27,7 +31,7 @@ wallet-cli contract clear-abi <address>
 | `<address>` | **必填。** 要清除 ABI 的合约 |
 | `--dry-run` | 只构建和估算，不签名/不广播；与 `--sign-only` / `--build-only` 互斥 |
 | `--sign-only` | 只签名不广播，输出已签名的 hex；与 `--dry-run` / `--build-only` 互斥；配合 `--expiration` 使用 |
-| `--build-only` | 只构建，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
+| `--build-only` | 构建并估算，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
 | `--expiration <ms>` | 交易过期时间（毫秒），最大 `86400000`（24 小时）；仅可与 `--sign-only` 或 `--build-only` 同用；省略时使用节点默认值（约 60 秒） |
 | `--permission-id <n>` | 用于签名的权限组（0=owner，1=witness，2-9=active）；默认 `0` |
 | `--wait` / `--wait-timeout <ms>` | 广播后轮询直到已确认/失败（上限默认取配置 `waitTimeoutMs`，内置 60000） |
@@ -40,7 +44,7 @@ wallet-cli contract clear-abi <address>
 示例中的 `$PW` 是你的 master password（来自环境变量、密码管理器等），通过 `--password-stdin` 从 stdin 传入。
 
 ```bash
-echo "$PW" | wallet-cli contract clear-abi TQ5nJ8mV...4wRe --network tron:nile --wait --password-stdin
+echo "$PW" | wallet-cli contract clear-abi TQ5nJ8mV...4wRe --network tron:3448148188 --wait --password-stdin
 ```
 
 ```console
@@ -54,11 +58,11 @@ echo "$PW" | wallet-cli contract clear-abi TQ5nJ8mV...4wRe --network tron:nile -
 ```
 
 ```bash
-echo "$PW" | wallet-cli contract clear-abi TQ5nJ8mV...4wRe --network tron:nile --wait --password-stdin -o json
+echo "$PW" | wallet-cli contract clear-abi TQ5nJ8mV...4wRe --network tron:3448148188 --wait --password-stdin -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"contract.clear-abi","data":{"kind":"contract-clear-abi","stage":"confirmed","txId":"3f7...","confirmed":true,"blockNumber":57882140,"failed":false,"contractAddress":"TQ5nJ8mV...","deployerAddress":"TQkXm4vN...","feeSun":0,"resource":{"netUsage":287,"netFeeSun":0,"energyUsage":0,"energyFeeSun":0}},"meta":{"durationMs":6510,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"contract.clear-abi","data":{"kind":"contract-clear-abi","stage":"confirmed","txId":"3f7...","confirmed":true,"blockNumber":57882140,"failed":false,"contractAddress":"TQ5nJ8mV...","deployerAddress":"TQkXm4vN...","feeSun":0,"energyUsed":0,"netUsed":287,"energyFeeSun":0,"netFeeSun":0,"resource":{"netUsage":287,"netFeeSun":0,"energyUsage":0,"energyFeeSun":0}},"meta":{"durationMs":6510,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出
@@ -68,11 +72,11 @@ echo "$PW" | wallet-cli contract clear-abi TQ5nJ8mV...4wRe --network tron:nile -
 | 阶段 | 字段 |
 |---|---|
 | 默认（提交） | `kind: "contract-clear-abi"`, `stage: "submitted"`, `txId`, `contractAddress`, `deployerAddress` |
-| `--wait`（已确认） | 同上，另加 `stage: "confirmed"`、`confirmed`（boolean）、`blockNumber`、`feeSun`、`resource`、`failed` |
+| `--wait`（已确认） | 同上，另加 `stage: "confirmed"`、`confirmed`（boolean）、`blockNumber`、返回时的扁平结算字段（`feeSun`、`energyUsed`、`netUsed`、`energyFeeSun`、`netFeeSun`）、它们面向治理命令的兼容视图 `resource`（`netUsage`、`netFeeSun`、`energyUsage`、`energyFeeSun`），以及 `failed` |
 
 ## 退出码
 
-`0` 已提交（早退模式下为已构建/已签名） · `1` 执行失败（`contract_not_found`——没有这个合约、`not_contract_deployer`、`watch_only_no_signer`、`auth_failed`） · `2` 用法错误（`invalid_value`——地址格式非法）。
+`0` 已提交（早退模式下为已构建/已签名） · `1` 执行失败（`contract_not_found`——没有这个合约、`not_contract_deployer`、`watch_only_no_signer`、`ledger_unsupported`、`auth_failed`） · `2` 用法错误（`invalid_value`——地址格式非法）。
 
 ## 另请参见
 

@@ -5,6 +5,8 @@
 `show` 用于只读查看当前权限，建议在修改前执行；`update` 通过一笔链上交易替换整个权限结构，并燃烧
 100 TRX。
 
+**仅限 TRON。** 多密钥权限模型是 TRON 的协议特性；本组两条子命令在 EVM 网络上都会以 `family_mismatch` 失败。
+
 ## 用法
 
 ```
@@ -30,7 +32,7 @@ wallet-cli permission COMMAND
 该交易才满足此权限组的授权条件。典型配置是使用多密钥阈值保护 owner 组，并通过限制了操作范围的
 active 组执行日常操作。
 
-> ⚠️ **owner 权限配置错误会永久锁死账户。** 如果新的 owner 密钥里不含任何你能签名的地址——或者你持有的密钥达不到阈值——交易照样会成功，而且链上没有任何补救手段。`permission update` 会以警告形式提示锁死风险，但**不会**阻止提交。警告码有：`owner_lockout`（本地密钥在 owner 组中没有任何权重）、`owner_lockout_partial`（权重低于阈值，因此必须有联署人）、`active_can_update_permission`（某个 active 组可以改写权限本身）和 `active_unknown_operations`（某个组设置了当前版本无法识别的操作位）。
+> ⚠️ **owner 权限配置错误会导致账户永久无法操作。** 如果新的 owner 密钥中不含任何你能签名的地址，或者你持有的密钥权重未达到阈值，交易仍可能成功，而且链上没有任何补救手段。`permission update` 会以警告形式提示此风险，但**不会**阻止提交。警告码有：`owner_lockout`（本地密钥在 owner 组中没有任何权重）、`owner_lockout_partial`（权重低于阈值，因此必须有联署人）、`active_can_update_permission`（某个 active 组可以改写权限本身）和 `active_unknown_operations`（某个组设置了当前版本无法识别的操作位）。
 
 ## 另请参见
 

@@ -12,7 +12,7 @@ wallet-cli proposal show <id> [options]
 
 报告单个提案：它设置的每个参数都以 `name  value` 的形式连同单位一起列出，批准数与阈值的对比，以及创建时间和到期时间。只读，无需账户。
 
-**这里显示的值是提案将要设置的值，不是当前生效的值。** 链上不记录提案创建时该参数原本是多少。对已结算的提案来说，当前值与那个基线毫无关系；而对已通过的提案，当前值*就是*该提案装上去的值。当前生效的值请用 [`chain params`](../chain/params.md) 查看。
+**这里显示的是提案要设置的目标值，而不是当前生效值。** 链上不记录提案创建时该参数的原值。对于已结算的提案，当前值可能已发生其他变化；对于刚通过且尚未被后续提案修改的提案，当前值就是该提案设置的值。请使用 [`chain params`](../chain/params.md) 查看当前生效值。
 
 文本输出只显示批准数。其背后的地址在 `json` 输出的 `approvedBy[]` 里，且是完整长度。
 
@@ -31,7 +31,7 @@ wallet-cli proposal show <id> [options]
 一个仍在投票窗口内的提案：
 
 ```bash
-wallet-cli proposal show 47 --network tron:nile
+wallet-cli proposal show 47 --network tron:3448148188
 ```
 
 ```console
@@ -48,7 +48,7 @@ Proposal #47
 一个在到期时达到阈值的提案——该值从那次统计起就已生效：
 
 ```bash
-wallet-cli proposal show 45 --network tron:nile
+wallet-cli proposal show 45 --network tron:3448148188
 ```
 
 ```console
@@ -65,7 +65,7 @@ Proposal #45
 一个到期时未达阈值、且携带两个参数的提案：
 
 ```bash
-wallet-cli proposal show 44 --network tron:nile
+wallet-cli proposal show 44 --network tron:3448148188
 ```
 
 ```console
@@ -81,11 +81,11 @@ Proposal #44
 ```
 
 ```bash
-wallet-cli proposal show 47 --network tron:nile -o json
+wallet-cli proposal show 47 --network tron:3448148188 -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"proposal.show","data":{"id":47,"proposerAddress":"TSRmq8kP...","state":"voting","createTime":1784620800000,"expirationTime":1784707200000,"approvals":12,"approvalThreshold":18,"reachedThreshold":false,"parameters":[{"id":3,"name":"getTransactionFee","value":15,"unit":"sun/byte"}],"approvedBy":["TSRaa1...","TSRbb2..."]},"meta":{"durationMs":22,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"proposal.show","data":{"id":47,"proposerAddress":"TSRmq8kP...","state":"voting","createTime":1784620800000,"expirationTime":1784707200000,"approvals":12,"approvalThreshold":18,"reachedThreshold":false,"parameters":[{"id":3,"name":"getTransactionFee","value":15,"unit":"sun/byte"}],"approvedBy":["TSRaa1...","TSRbb2..."]},"meta":{"durationMs":22,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出

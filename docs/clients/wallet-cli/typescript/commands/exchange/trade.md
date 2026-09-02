@@ -45,7 +45,7 @@ wallet-cli exchange trade <id> --sell <TRX|asset-id>
 | `--slippage <percent>` | 按当前储备推算下限，并在其基础上扣掉这个百分比；须 > 0 且 < 100 |
 | `--dry-run` | 只构建和估算，不签名/不广播；与 `--sign-only` / `--build-only` 互斥 |
 | `--sign-only` | 只签名不广播，输出已签名的 hex；与 `--dry-run` / `--build-only` 互斥；配合 `--expiration` 使用 |
-| `--build-only` | 只构建，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
+| `--build-only` | 构建并估算，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
 | `--expiration <ms>` | 交易过期时间（毫秒），最大 `86400000`（24 小时）；仅可与 `--sign-only` 或 `--build-only` 同用；省略时使用节点默认值（约 60 秒） |
 | `--permission-id <n>` | 用于签名的权限组（0=owner，1=witness，2-9=active）；默认 `0` |
 | `--wait` / `--wait-timeout <ms>` | 广播后轮询直到已确认/失败（上限默认取配置 `waitTimeoutMs`，内置 60000） |
@@ -60,7 +60,7 @@ wallet-cli exchange trade <id> --sell <TRX|asset-id>
 显式给出下限：
 
 ```bash
-echo "$PW" | wallet-cli exchange trade 12 --sell TRX --amount 100 --min-received 4900 --network tron:nile --wait --password-stdin
+echo "$PW" | wallet-cli exchange trade 12 --sell TRX --amount 100 --min-received 4900 --network tron:3448148188 --wait --password-stdin
 ```
 
 ```console
@@ -76,14 +76,14 @@ echo "$PW" | wallet-cli exchange trade 12 --sell TRX --amount 100 --min-received
   Status        success
 ```
 
-同一笔交易改用 `--slippage 1`：CLI 根据当前储备算出 4,950，再扣掉 1 %，把 4,900 作为下限发出。
+同一笔交易改用 `--slippage 1` 时，CLI 会根据当前储备算出 4,950，再扣除 1%，以 4,900.5 作为下限。滑点百分比会先换算为基点并四舍五入到最接近的整数，因此 `--slippage 1.006` 实际容忍 1.01% 的滑点；随后，下限按整数除法向下取整。
 
 ```bash
-echo "$PW" | wallet-cli exchange trade 12 --sell TRX --amount 100 --slippage 1 --network tron:nile --wait --password-stdin -o json
+echo "$PW" | wallet-cli exchange trade 12 --sell TRX --amount 100 --slippage 1 --network tron:3448148188 --wait --password-stdin -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"exchange.trade","data":{"kind":"exchange-trade","stage":"confirmed","txId":"d9a...","confirmed":true,"blockNumber":57884455,"failed":false,"exchangeId":12,"pair":"TRX:1000123","traderAddress":"TQkXm4vN...","soldTokenId":"_","soldQuant":"100000000","soldLabel":"TRX","soldDecimals":6,"receivedTokenId":"1000123","receivedLabel":"MyToken","receivedDecimals":6,"receivedQuant":"4950000000","estimatedReceivedQuant":"4950000000","minReceivedQuant":"4900000000","feeSun":0},"meta":{"durationMs":6490,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"exchange.trade","data":{"kind":"exchange-trade","stage":"confirmed","txId":"d9a...","confirmed":true,"blockNumber":57884455,"failed":false,"exchangeId":12,"pair":"TRX:1000123","traderAddress":"TQkXm4vN...","soldTokenId":"_","soldQuant":"100000000","soldLabel":"TRX","soldDecimals":6,"receivedTokenId":"1000123","receivedLabel":"MyToken","receivedDecimals":6,"receivedQuant":"4950000000","estimatedReceivedQuant":"4950000000","minReceivedQuant":"4900500000","feeSun":0},"meta":{"durationMs":6490,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出
@@ -102,7 +102,7 @@ TRX 以 `"_"` 标识；所有数量都是最小单位下的**字符串**。确�
 
 ## 退出码
 
-`0` 已提交（早退模式下为已构建/已签名） · `1` 执行失败（`exchange_not_found`——没有这个交易对、`token_not_in_exchange`、`exchange_closed`——某一侧储备为零、`exchange_trading_disabled`——该网络不接受 Bancor 交易、`slippage_exceeded`——返还量低于下限、`transaction_rejected`——节点拒绝了它，例如余额不足、`watch_only_no_signer`、`auth_failed`） · `2` 用法错误（`missing_option`——没给 `--sell`；`invalid_option`——`--amount` / `--raw-amount` 两个都给了或都没给，或给了不止一个下限参数；`invalid_amount`——金额或 `--min-received` 不是十进制数字，或小数位数超过该 token 允许的位数；`invalid_value`——金额 ≤ 0，或 `--slippage` 不在 0–100 之间）。
+`0` 已提交（早退模式下为已构建/已签名） · `1` 执行失败（`exchange_not_found`——没有这个交易对、`token_not_in_exchange`、`exchange_closed`——某一侧储备为零、`exchange_trading_disabled`——该网络不接受 Bancor 交易、`slippage_exceeded`——返还量低于下限、`transaction_rejected`——节点拒绝了它，例如余额不足、`watch_only_no_signer`、`auth_failed`） · `2` 用法错误（`missing_option`——没给 `--sell`；`invalid_option`——`--amount` / `--raw-amount` 两个都给了或都没给，或给了不止一个下限参数；`invalid_amount`——金额或 `--min-received` 不是十进制数字，或小数位数超过该 token 允许的位数；`invalid_value`——金额 ≤ 0，或 `--slippage` 没有同时满足「大于 0」且「小于 100」；`0` 和 `100` 本身也会被拒绝）。
 
 ## 另请参见
 

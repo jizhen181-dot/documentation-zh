@@ -3,6 +3,8 @@
 基于 FreezeV2 的质押、资源代理和解冻提取——当前的质押模型。与旧版模型的区别，参见
 [concepts/staking-models](../concepts/staking-models.md)。
 
+下面的交易示例均为节选：每条签名命令实际还会输出权限 id 提示、密钥选择器、签名前后的 hex 字符串，以及结尾的 `<command> successful !!!`。这里只保留 `TxId is …`，因为后续执行 `GetTransactionById` 时需要使用该值。
+
 ## FreezeBalanceV2 / UnfreezeBalanceV2
 
 ### FreezeBalanceV2
@@ -13,13 +15,13 @@
 
 - `OwnerAddress`——发起交易的账户地址，可选，默认为登录账户的地址。
 - `frozen_balance`——冻结的数量，单位为最小单位（Sun），最小为 1000000 sun。
-- `ResourceCode`——0 BANDWIDTH；1 ENERGY。
+- `ResourceCode`——`0` BANDWIDTH；`1` ENERGY；只有在 `getAllowNewResourceModel` 已开启时才可用 `2` TRON_POWER。
 
 示例：
 
 ```console
 wallet> FreezeBalanceV2 TJAVcszse667FmSNCwU2fm6DmfM5D4AyDh 1000000000000000 0
-txid is 82244829971b4235d98a9f09ba67ddb09690ac2f879ad93e09ba3ec1ab29177d
+TxId is 82244829971b4235d98a9f09ba67ddb09690ac2f879ad93e09ba3ec1ab29177d
 wallet> GetTransactionById  82244829971b4235d98a9f09ba67ddb09690ac2f879ad93e09ba3ec1ab29177d
 {
     "ret":[
@@ -61,13 +63,13 @@ wallet> GetTransactionById  82244829971b4235d98a9f09ba67ddb09690ac2f879ad93e09ba
 
 - `OwnerAddress`——发起交易的账户地址，可选，默认为登录账户的地址。
 - `unfreezeBalance`——解冻的数量，单位为最小单位（Sun）。
-- `ResourceCode`——0 BANDWIDTH；1 ENERGY。
+- `ResourceCode`——`0` BANDWIDTH；`1` ENERGY；只有在 `getAllowNewResourceModel` 已开启时才可用 `2` TRON_POWER。
 
 示例：
 
 ```console
 wallet> UnFreezeBalanceV2 TJAVcszse667FmSNCwU2fm6DmfM5D4AyDh 9000000 0
-txid is dcfea1d92fc928d24c88f7f71a03ae8105d0b5b112d6d48be93d3b9c73bea634
+TxId is dcfea1d92fc928d24c88f7f71a03ae8105d0b5b112d6d48be93d3b9c73bea634
 wallet> GetTransactionById dcfea1d92fc928d24c88f7f71a03ae8105d0b5b112d6d48be93d3b9c73bea634
 {
     "ret":[
@@ -119,7 +121,7 @@ wallet> GetTransactionById dcfea1d92fc928d24c88f7f71a03ae8105d0b5b112d6d48be93d3
 
 ```console
 wallet> DelegateResource TJAVcszse667FmSNCwU2fm6DmfM5D4AyDh 10000000 0 TQ4gjjpAjLNnE67UFbmK5wVt5fzLfyEVs3 true
-txid is 363ac0b82b6ad3e0d3cad90f7d72b3eceafe36585432a3e013389db36152b6ed
+TxId is 363ac0b82b6ad3e0d3cad90f7d72b3eceafe36585432a3e013389db36152b6ed
 wallet> GetTransactionById 363ac0b82b6ad3e0d3cad90f7d72b3eceafe36585432a3e013389db36152b6ed
 {
     "ret":[
@@ -171,7 +173,7 @@ wallet> GetTransactionById 363ac0b82b6ad3e0d3cad90f7d72b3eceafe36585432a3e013389
 
 ```console
 wallet> UnDelegateResource TJAVcszse667FmSNCwU2fm6DmfM5D4AyDh 1000000 0 TQ4gjjpAjLNnE67UFbmK5wVt5fzLfyEVs3
-txid is feb334794cf361fd351728026ccf7319e6ae90eba622b9eb53c626cdcae4965c
+TxId is feb334794cf361fd351728026ccf7319e6ae90eba622b9eb53c626cdcae4965c
 wallet> GetTransactionById  feb334794cf361fd351728026ccf7319e6ae90eba622b9eb53c626cdcae4965c
 {
     "ret":[
@@ -218,7 +220,7 @@ wallet> GetTransactionById  feb334794cf361fd351728026ccf7319e6ae90eba622b9eb53c6
 
 ```console
 wallet> withdrawexpireunfreeze TJAVcszse667FmSNCwU2fm6DmfM5D4AyDh
-txid is e5763ab8dfb1e7ed076770d55cf3c1ddaf36d75e23ec8330f99df7e98f54a147
+TxId is e5763ab8dfb1e7ed076770d55cf3c1ddaf36d75e23ec8330f99df7e98f54a147
 wallet> GetTransactionById e5763ab8dfb1e7ed076770d55cf3c1ddaf36d75e23ec8330f99df7e98f54a147
 {
     "ret":[
@@ -263,7 +265,7 @@ wallet> GetTransactionById e5763ab8dfb1e7ed076770d55cf3c1ddaf36d75e23ec8330f99df
 
 ```console
 wallet> cancelAllUnfreezeV2 TJAVcszse667FmSNCwU2fm6DmfM5D4AyDh
-txid is e5763ab8dfb1e7ed076770d55cf3c1ddaf36d75e23ec8330f99df7e98f54a147
+TxId is e5763ab8dfb1e7ed076770d55cf3c1ddaf36d75e23ec8330f99df7e98f54a147
 wallet> GetTransactionById e5763ab8dfb1e7ed076770d55cf3c1ddaf36d75e23ec8330f99df7e98f54a147
 {
     "ret":[
@@ -361,9 +363,8 @@ wallet> getDelegatedResourceAccountIndexV2 TJAVcszse667FmSNCwU2fm6DmfM5D4AyDh
 
 ```console
 wallet> getCanDelegatedMaxSize TJAVcszse667FmSNCwU2fm6DmfM5D4AyDh 0
-{
-	"max_size": 999999978708334
-}
+GetCanDelegatedMaxSize=999999978708334
+GetCanDelegatedMaxSize  successful !!!
 ```
 
 ### GetAvailableUnfreezeCount
@@ -380,9 +381,8 @@ wallet> getCanDelegatedMaxSize TJAVcszse667FmSNCwU2fm6DmfM5D4AyDh 0
 
 ```console
 wallet> getAvailableUnfreezeCount TJAVcszse667FmSNCwU2fm6DmfM5D4AyDh
-{
-	"count": 31
-}
+GetAvailableUnfreezeCount=31
+GetAvailableUnfreezeCount  successful!!!
 ```
 
 ### GetCanWithdrawUnfreezeAmount
@@ -400,9 +400,7 @@ wallet> getAvailableUnfreezeCount TJAVcszse667FmSNCwU2fm6DmfM5D4AyDh
 
 ```console
 wallet> getCanWithdrawUnfreezeAmount TJAVcszse667FmSNCwU2fm6DmfM5D4AyDh 1671100335000
-{
-	"amount": 9000000
-}
+GetCanWithdrawUnfreezeAmount  successful amount:9000000 !!!
 ```
 
 ## 另请参见

@@ -1,12 +1,12 @@
 # 配置参考
 
-`config.conf` 的完整参考。wallet-cli 从 `src/main/resources/config.conf` 读取节点配置。你也可以在
-运行时用 [`SwitchNetwork`](../commands/network.md) 命令切换网络，因此只有在使用自定义节点或下述
-高级功能时才需要编辑 `config.conf`。
+`config.conf` 的完整参考。启动时，wallet-cli 先从进程工作目录读取 `./config.conf`；该文件不存在时，
+则加载打包在 classpath 中的资源（源码检出中对应 `src/main/resources/config.conf`）。你也可以在运行时用
+[`SwitchNetwork`](../commands/network.md) 切换网络。
 
 ## 最小配置
 
-一份最小的 `config.conf` 只需要网络类型和一个可通信的 FullNode：
+一份最小的 `config.conf` 只需要一个 FullNode 端点。保留 `net.type` 在配置主网 API key 时有用，但它并不决定当前使用哪个网络：
 
 ```
 net {
@@ -100,7 +100,7 @@ tronlink = {
 
 | 字段 | 用途 |
 |---|---|
-| `net.type` | 网络类型（例如 `mainnet`）。 |
+| `net.type` | 决定是否加载 `grpc.mainnet.apiKey`。它并不决定当前使用哪个网络。 |
 | `fullnode.ip.list` | FullNode 端点 `ip : port`。 |
 | `soliditynode.ip.list` | 可选的 SolidityNode 端点。 |
 | `ledger_debug` | 启用 Ledger 调试输出。 |
@@ -112,9 +112,12 @@ tronlink = {
 
 ## 连接 Java-tron
 
-wallet-cli 通过 gRPC 协议连接 Java-tron，节点可以部署在本地或远程。在
-`src/main/resources/config.conf` 中配置 Java-tron 节点的 IP 和端口，使 wallet-cli 能与节点通信。
-你也可以使用 `SwitchNetwork` 在主网、测试网（Nile 和 Shasta）以及自定义网络之间切换——参见
+wallet-cli 通过 gRPC 连接 Java-tron。启动时使用的网络是**推断**出来的：把 `fullnode.ip.list` 和
+`soliditynode.ip.list` 与内置的主网、Nile、Shasta 端点做比对，其他端点组合会被识别为 `CUSTOM`。
+因此，`net.type = mainnet` 配上 Nile 端点，启动后仍然连的是 Nile。转账前请直接核对端点本身。
+
+若想在不重新打包 JAR 的前提下覆盖内置配置，把 `config.conf` 放到运行 `java -jar` 时的工作目录即可。
+你也可以在运行时使用 `SwitchNetwork` 在主网、Nile、Shasta 以及自定义端点之间切换——参见
 [commands/network](../commands/network.md)。
 
 ## 另请参见

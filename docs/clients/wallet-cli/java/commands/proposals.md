@@ -15,7 +15,7 @@
   `http://tronscan.org/#/sr/committee`。
 - `Value0`——修改后的值。
 
-示例中，把 4 号参数（修改 token 发行费用）改为 1000 TRX，如下：
+参数值会原样提交给链上——CLI 不做任何单位换算，因此以 SUN 计价的参数必须按 SUN 传入。示例中把 4 号提案（token 发行费用）设为原始值 `1000`，也就是 1000 SUN：
 
 ```console
 > createProposal 4 1000
@@ -38,11 +38,11 @@
 }
 ```
 
-对应的 id 为 1。
+示例中创建的提案 ID 为 1。
 
 ## ApproveProposal
 
-赞成 / 不赞成某项提案。
+批准提案，或撤销此前对提案的批准。
 
 ```console
 > approveProposal [OwnerAddress] id is_or_not_add_approval
@@ -50,18 +50,18 @@
 
 - `OwnerAddress`（可选）——发起交易的账户地址。默认：登录账户的地址。
 - `id`——已发起提案的 ID。示例：1。
-- `is_or_not_add_approval`——true 表示赞成；false 表示不赞成。
+- `is_or_not_add_approval`——`true` 表示批准；`false` 表示撤销已有批准。
 
 示例：
 
 ```console
-> ApproveProposal 1 true  # 赞成该提案
-> ApproveProposal 1 false  # 取消已赞成的提案
+> ApproveProposal 1 true  # 批准该提案
+> ApproveProposal 1 false  # 撤销对该提案的批准
 ```
 
 ## DeleteProposal
 
-删除已有提案。该提案必须由发起提案的超级节点取消。
+删除已有提案。只有发起该提案的超级代表账户才能执行此操作。
 
 ```console
 > deleteProposal [OwnerAddress] proposalId

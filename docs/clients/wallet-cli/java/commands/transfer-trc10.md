@@ -15,8 +15,7 @@
 - `OwnerAddress`（可选）——发起交易的账户地址。默认：登录账户的地址。
 - `AssetName`——所发行 TRC10 token 的名称。
 - `AbbrName`——TRC10 token 的缩写。
-- `TotalSupply`——TotalSupply = 发行方账户余额 + 全部冻结 token 数量。TotalSupply：总发行量。
-  发行方账户余额：发行时的余额。全部冻结 token 数量：资产转移和发行之前的数量。
+- `TotalSupply`——总供应量，由发行时进入发行方账户的可用数量与全部冻结供应量组成。
 - `TrxNum`、`AssetNum`——这两个参数决定 token 发行时的兑换比率。兑换比率 = TrxNum / AssetNum。
   AssetNum：以所发行 token 的基础单位计。TrxNum：以 SUN 计（0.000001 TRX）。
 - `Precision`——精度，即小数点后位数。
@@ -24,9 +23,9 @@
   （仅限 TransferAssetContract）。
 - `PublicFreeNetLimit`——所有账户允许使用的带宽总量上限。Token 发行方可以冻结 TRX 来获得带宽
   （仅限 TransferAssetContract）。
-- `StartDate`、`EndDate`——token 发行的开始和结束日期。在此期间，其他用户可以参与 token 发行。
-- `FrozenAmount0`、`FrozenDays0`——token 冻结的数量和天数。FrozenAmount0：必须大于 0。
-  FrozenDays0：必须在 1 到 3653 之间。
+- `StartDate`、`EndDate`——token 发行期的开始和结束日期。其他用户只能在此期间参与发行。
+- `FrozenAmount0`、`FrozenDays0`——冻结供应量及冻结天数。`FrozenAmount0` 必须大于 0，
+  `FrozenDays0` 必须在 1 到 3653 之间。
 
 示例：
 
@@ -130,19 +129,27 @@ TRC10 token 转账。
 ```console
 > TransferAsset TN3zfjYUmMFK3ZsHSsrdJoNRtGkQmZLBLz 1000001 1000
 > getaccount TN3zfjYUmMFK3ZsHSsrdJoNRtGkQmZLBLz  # 转账后查看目标账户信息
-address: TN3zfjYUmMFK3ZsHSsrdJoNRtGkQmZLBLz
-    assetV2
+{
+  "address": "TN3zfjYUmMFK3ZsHSsrdJoNRtGkQmZLBLz",
+  "balance": 9999900000,
+  "assetV2": [
     {
-    id: 1000001
-    balance: 1000
-    latest_asset_operation_timeV2: null
-    free_asset_net_usageV2: 0
+      "key": "1000001",
+      "value": 1000
     }
+  ],
+  "free_asset_net_usageV2": [
+    {
+      "key": "1000001",
+      "value": 0
+    }
+  ]
+}
 ```
 
 ### ParticipateAssetIssue
 
-参与 TRC10 token 的发行。
+在发行期内参与购买 TRC10 token。
 
 ```console
 > ParticipateAssetIssue [OwnerAddress] ToAddress AssetID Amount
@@ -153,21 +160,23 @@ address: TN3zfjYUmMFK3ZsHSsrdJoNRtGkQmZLBLz
 - `AssetID`——TRC10 token ID。示例：1000001。
 - `Amount`——要转移的 TRC10 token 数量。
 
-参与过程必须发生在 TRC10 的发行期内，否则可能会报错。
+该操作必须在 TRC10 token 的发行期内完成，否则会报错。
 
 示例：
 
 ```console
 > ParticipateAssetIssue TRGhNNfnmgLegT4zHNjEqDSADjgmnHvubJ 1000001 1000
 > getaccount TJCnKsPa7y5okkXvQAidZBzqx3QyQ6sxMW  # 查看剩余余额
-address: TJCnKsPa7y5okkXvQAidZBzqx3QyQ6sxMW
-assetV2
+{
+  "address": "TJCnKsPa7y5okkXvQAidZBzqx3QyQ6sxMW",
+  "balance": 9999900000,
+  "assetV2": [
     {
-    id: 1000001
-    balance: 1000
-    latest_asset_operation_timeV2: null
-    free_asset_net_usageV2: 0
+      "key": "1000001",
+      "value": 1000
     }
+  ]
+}
 ```
 
 ### ListAssetIssuePaginated
@@ -175,7 +184,7 @@ assetV2
 分页查询所有 token 的列表。返回位于 offset 之后的 token 列表。
 
 ```console
-> ListAssetIssuePaginated address code salt
+> ListAssetIssuePaginated offset limit
 ```
 
 示例：
@@ -186,7 +195,7 @@ assetV2
 
 ### UnfreezeAsset
 
-解冻所有应在冻结期结束后解冻的 TRC10 token。
+解冻所有冻结期已经结束的 TRC10 token。
 
 ```console
 > unfreezeasset [OwnerAddress]

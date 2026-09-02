@@ -20,6 +20,8 @@ wallet-cli backup --records [<account>] [--from <datetime>] [--to <datetime>] [-
 - **原生格式**（默认）——钱包自有的备份 JSON。种子账户导出的是助记词，因此整个 seed 会随之迁移。
 - **`--keystore`**——标准的 Web3 keystore JSON，可被 TronLink 等钱包导入，用**你的 master password** 加密。keystore 只保存**单个私钥**：HD 账户仅导出当前派生出的那把密钥，该密钥到了别处只是一个独立账户，无法再从中派生出任何东西。要迁移整个 seed，请使用原生格式。
 
+**每个 keystore 只保存一个链家族的密钥。** 种子账户会为 TRON（coin type 195）和 EVM（coin type 60）派生不同密钥，而单个 keystore 只能保存其中一把，因此由 `--network` 决定导出哪个家族；省略时使用 `config.defaultNetwork`。回执和导出日志都会记录实际导出的家族。私钥账户本身只有一把密钥，因此忽略该选择；原生备份一次覆盖全部家族，无需选择，也不会报告家族。
+
 默认情况下**文件写入当前工作目录**——`./<accountId>-<timestamp>.json`，使用 `--keystore` 时则为 `./<accountId>-<timestamp>.keystore.json`。`--out` 可覆盖该路径。
 
 > 命令执行后，当前工作目录中会出现包含私钥或助记词的文件。不要在共享目录或 Git 仓库中执行该命令。
@@ -45,6 +47,7 @@ wallet-cli backup --records [<account>] [--from <datetime>] [--to <datetime>] [-
 | `--keystore` | 导出为标准 Web3 keystore，而不是原生格式 |
 | `--out <path>` | 输出文件路径；模式 0600，绝不覆盖（默认：当前目录，见上文） |
 | `--password-stdin` | 从 stdin（fd 0）读取 master password |
+| `--network <id>` | 配合 `--keystore` 使用，决定导出哪个家族的密钥（`tron:3448148188` → TRON 密钥，`eip155:1` → EVM 密钥）。不会访问任何节点 |
 
 使用 `--records` 时（不再指定账户）：
 
@@ -70,7 +73,7 @@ printf '%s' "$PW" | wallet-cli backup main --password-stdin
 ```
 
 ```console
-⚠️ Backup written ./wlt_d1qbj2fb.0-1783751611076.json
+⚠️ Backup written /home/you/wlt_d1qbj2fb.0-1783751611076.json
   Account ID  wlt_d1qbj2fb.0
   Secret      recovery phrase
   File mode   0600
@@ -86,8 +89,9 @@ printf '%s' "$PW" | wallet-cli backup main --keystore --password-stdin
 ```
 
 ```console
-⚠️ Keystore written ./wlt_d1qbj2fb.0-1785930000.keystore.json
+⚠️ Keystore written /home/you/wlt_d1qbj2fb.0-1785930000.keystore.json
   Account ID  wlt_d1qbj2fb.0
+  Family      tron
   Secret      private key
   File mode   0600
   Bytes       491
@@ -100,7 +104,7 @@ printf '%s' "$PW" | wallet-cli backup main --keystore --out ./main.keystore.json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"backup","data":{"accountId":"wlt_d1qbj2fb.0","label":"main","type":"seed","index":0,"active":true,"addresses":{"tron":"TQkXm4vN...5Zt7Uw"},"seedId":"wlt_d1qbj2fb","secretType":"privateKey","format":"keystore","out":"./main.keystore.json","fileMode":"0600","bytes":491},"meta":{"durationMs":1420,"warnings":[]}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"backup","data":{"accountId":"wlt_d1qbj2fb.0","label":"main","type":"seed","index":0,"active":true,"addresses":{"tron":"TQkXm4vN...5Zt7Uw","evm":"0x86B3D0f2...f4106"},"seedId":"wlt_d1qbj2fb","derivationPath":{"tron":"m/44'/195'/0'/0/0","evm":"m/44'/60'/0'/0/0"},"family":"tron","secretType":"privateKey","format":"keystore","out":"/home/you/main.keystore.json","fileMode":"0600","bytes":491},"meta":{"durationMs":1420,"warnings":[]},"chain":{"family":"tron","network":"tron:728126428","chainId":"728126428"}}
 ```
 
 审计日志：
@@ -111,11 +115,11 @@ wallet-cli backup --records --limit 3
 
 ```console
 Backup records (showing 3 of 12)
-| Time (UTC)       | Exported account         | Operation         | File                                      |
-| ---------------- | ------------------------ | ----------------- | ----------------------------------------- |
-| 2026-08-05 11:40 | TQkXm4vN...5Zt7Uw (main) | backup --keystore | ./wlt_d1qbj2fb.0-1785930000.keystore.json |
-| 2026-08-04 09:12 | TQkXm4vN...5Zt7Uw (main) | backup            | ./wlt_d1qbj2fb.0-1785834720.json          |
-| 2026-07-30 22:03 | TBeta9mR...8pLx          | backup            | ./tbeta-seed.json                         |
+| Time (UTC)       | Exported account         | Operation         | File                                              |
+| ---------------- | ------------------------ | ----------------- | ------------------------------------------------- |
+| 2026-08-05 11:40 | TQkXm4vN...5Zt7Uw (main) | backup --keystore | /home/you/wlt_d1qbj2fb.0-1785930000.keystore.json |
+| 2026-08-04 09:12 | TQkXm4vN...5Zt7Uw (main) | backup            | /home/you/wlt_d1qbj2fb.0-1785834720.json          |
+| 2026-07-30 22:03 | TBeta9mR...8pLx          | backup            | /home/you/tbeta-seed.json                         |
 ```
 
 ```bash
@@ -123,12 +127,12 @@ wallet-cli backup --records --limit 3 -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"backup.records","data":{"records":[{"operation":"backup --keystore","accountId":"wlt_d1qbj2fb.0","account":"TQkXm4vN...5Zt7Uw","label":"main","out":"./wlt_d1qbj2fb.0-1785930000.keystore.json","timestamp":"2026-08-05T11:40:00Z"},{"operation":"backup","accountId":"wlt_d1qbj2fb.0","account":"TQkXm4vN...5Zt7Uw","label":"main","out":"./wlt_d1qbj2fb.0-1785834720.json","timestamp":"2026-08-04T09:12:00Z"},{"operation":"backup","accountId":"wlt_9x3k2m7p.0","account":"TBeta9mR...8pLx","label":null,"out":"./tbeta-seed.json","timestamp":"2026-07-30T22:03:00Z"}]},"meta":{"durationMs":8,"warnings":[],"pagination":{"offset":0,"limit":3,"total":12}}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"backup.records","data":{"records":[{"operation":"backup --keystore","accountId":"wlt_d1qbj2fb.0","account":"TQkXm4vN...5Zt7Uw","family":"tron","label":"main","out":"/home/you/wlt_d1qbj2fb.0-1785930000.keystore.json","timestamp":"2026-08-05T11:40:00Z"},{"operation":"backup","accountId":"wlt_d1qbj2fb.0","account":"TQkXm4vN...5Zt7Uw","label":"main","out":"/home/you/wlt_d1qbj2fb.0-1785834720.json","timestamp":"2026-08-04T09:12:00Z"},{"operation":"backup","accountId":"wlt_9x3k2m7p.0","account":"TBeta9mR...8pLx","label":null,"out":"/home/you/tbeta-seed.json","timestamp":"2026-07-30T22:03:00Z"}]},"meta":{"durationMs":8,"warnings":[],"pagination":{"offset":0,"limit":3,"total":12}},"chain":{"family":"tron","network":"tron:728126428","chainId":"728126428"}}
 ```
 
 ## 输出
 
-两种用法都是本地命令——没有 `chain` 块——但它们的 `command` id 不同：导出为 `backup`，日志为 `backup.records`。
+两种用法都在本地执行、不访问任何节点，但 `backup` 带有一个可选的网络显示选择器：所选网络（或默认网络）决定 `--keystore` 导出哪个家族。因此结果中包含 `chain` 块，`--records` 时也一样。两种用法的 `command` id 不同：导出为 `backup`，日志为 `backup.records`。
 
 导出时的 `data` 是账户信息加上文件详情：
 
@@ -139,11 +143,13 @@ wallet-cli backup --records --limit 3 -o json
 | `type` | string | 账户类型（可导出的类型：`seed` / `privateKey`） |
 | `index` | number \| null | HD 派生索引；私钥账户为 `null` |
 | `active` | boolean | 是否为当前账户 |
-| `addresses.tron` | string | Base58 TRON 地址 |
+| `addresses` | object | 该账户能产生的每个家族各一项：`tron` 和/或 `evm` |
+| `derivationPath` | object \| null | `seed` 账户按家族给出的 BIP44 路径；`privateKey` 为 `null` |
+| `family` | string | 使用 `--keystore` 时，实际写出的是哪个家族的密钥；原生备份覆盖全部家族，因此不含该字段 |
 | `seedId` | string | 所属种子钱包 id（仅 `seed` 账户） |
 | `secretType` | string | 导出的密钥种类——`mnemonic`，使用 `--keystore` 时为 `privateKey` |
 | `format` | string | 使用了 `--keystore` 时为 `keystore` |
-| `out` | string | 写入的文件路径 |
+| `out` | string | 写入的**绝对**路径——相对的 `--out` 会先按工作目录解析，再据此报告 |
 | `fileMode` | string | 文件权限，始终为 `0600` |
 | `bytes` | number | 文件大小（字节） |
 
@@ -153,16 +159,14 @@ wallet-cli backup --records --limit 3 -o json
 |---|---|---|
 | `operation` | string | `backup` 或 `backup --keystore` |
 | `accountId` / `account` / `label` | string \| null | 密钥被导出的账户；未设置标签时 `label` 为 `null` |
-| `out` | string | 密钥写入的文件 |
+| `out` | string | 密钥写入的文件，以**绝对**路径给出 |
 | `timestamp` | string | 导出时间，UTC |
 
 `meta.pagination` 包含 `offset`、`limit`（`null` = 不限）和 `total`。
 
 ## 退出码
 
-`0` 成功 · `1` 执行失败（`not_exportable`——仅观察或 Ledger 账户，`invalid_value`——账户不存在，`auth_failed`，`io_error`——路径不可写）· `2` 用法错误（`output_exists`——目标文件已存在，且绝不覆盖；`invalid_value`——不带 `--records` 使用了记录过滤选项、`--keystore` / `--out` 与 `--records` 同用，或时间 / limit / offset 取值非法）。
-
-`invalid_value` 在这里两个退出码下都会出现：账户引用无法解析是退出码 `1`，调用格式错误是退出码 `2`。请优先按退出码分支处理。
+`0` 成功 · `1` 执行失败（`account_not_found`——账户不存在；`not_exportable`——仅观察或 Ledger 账户；`auth_failed`；`io_error`——路径不可写）· `2` 用法错误（`output_exists`——目标文件已存在，且绝不覆盖；`invalid_value`——不带 `--records` 使用了记录过滤选项、`--keystore` / `--out` 与 `--records` 同用，或时间 / limit / offset 取值非法）。
 
 ## 另请参见
 

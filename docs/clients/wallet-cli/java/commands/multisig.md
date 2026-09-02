@@ -3,6 +3,8 @@
 配置账户权限、联合签名交易、查看签名权重，以及使用 TronLink 多签。底层的权限模型参见
 [concepts/multisig](../concepts/multisig.md)。
 
+REPL 中许多写操作命令只在**最后一个参数位**接受 `-m`。加上它，该操作就会走交互式多签流程，而不是普通的单签广播。并非所有命令都支持，请先查看该命令内置的用法说明再决定是否追加。
+
 ## 如何使用 wallet-cli 的多重签名功能 {#how-to-use-the-multi-signature-feature-of-wallet-cli}
 
 多重签名允许其他用户访问该账户，以便更好地管理它。访问权限分为三类：
@@ -24,7 +26,7 @@
 wallet> updateAccountPermission
 === UpdateAccountPermission Interactive Mode ===
 
-Select permission to modify:
+Please enter the index(1-7) to operate:
 1. owner_permission
 2. witness_permission
 3. active_permissions
@@ -47,7 +49,7 @@ TNhXo1GbRNCuorvYu5JFWN3m2NYr9QQpVR 和 TKwhcDup8L2PH5r6hxp5CQvQzZqJLmKvZP。acti
 > SendCoin TJCnKsPa7y5okkXvQAidZBzqx3QyQ6sxMW 10000000000000000
 ```
 
-将会提示 "Please confirm and input your permission id, if input y or Y means default 0, other
+将会提示 "Please confirm and input your permission id, if input y/Y means default 0, other
 non-numeric characters will cancel transaction."
 
 这需要 active 访问的转账授权。输入：2
@@ -59,10 +61,11 @@ TNhXo1GbRNCuorvYu5JFWN3m2NYr9QQpVR 的私钥来签名交易。
 TKwhcDup8L2PH5r6hxp5CQvQzZqJLmKvZP 的私钥来签名交易。
 
 每个账户的权重为 1，访问阈值为 2。当条件满足时，用户会收到提示
-"Send 10000000000000000 Sun to TJCnKsPa7y5okkXvQAidZBzqx3QyQ6sxMW successful !!"。
+"Send 10000000000000000 Sun to TJCnKsPa7y5okkXvQAidZBzqx3QyQ6sxMW  successful !!"。
 
-这就是多个账户在同一个 cli 上使用多重签名的方式。如果在多个 cli 上签名，请根据获得的交易十六进制
-字符串使用 `addTransactionSign` 指令。签名完成后，用户需要手动广播最终交易。
+以上流程适用于在同一个 CLI 中使用多个账户完成多重签名。如果签名账户分布在不同的 CLI 实例中，
+请传递交易的十六进制字符串，并使用 `addTransactionSign` 依次添加签名。收集完成后，需要手动广播
+最终交易。
 
 ## GetTransactionSignWeight
 
@@ -198,7 +201,7 @@ wallet> tronlinkmultisign
 1. Multi-sign transaction list
 2. Create multi-sign transaction
 0. Exit
-Please enter the number to operate:
+Please enter to operate:
 ```
 
 ## 另请参见

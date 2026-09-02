@@ -25,7 +25,7 @@ wallet-cli stake freeze --amount-sun <n> [--resource energy|bandwidth]
 | `--resource <energy\|bandwidth>` | 要换取的资源类型（默认 `bandwidth`） |
 | `--dry-run` | 只估算，不签名/不广播；与 `--sign-only` / `--build-only` 互斥 |
 | `--sign-only` | 只签名不广播，输出已签名的 hex；与 `--dry-run` / `--build-only` 互斥；配合 `--expiration` 使用 |
-| `--build-only` | 只构建，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
+| `--build-only` | 构建并估算，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
 | `--expiration <ms>` | 交易过期时间（毫秒），最大 `86400000`（24 小时）；仅可与 `--sign-only` 或 `--build-only` 同用；省略时使用节点默认值（约 60 秒） |
 | `--permission-id <n>` | 用于签名的权限组（0=owner，1=witness，2-9=active）；默认 `0` |
 | `--wait` / `--wait-timeout <ms>` | 广播后轮询直到已确认/失败（上限默认取配置 `waitTimeoutMs`，内置 60000） |
@@ -40,28 +40,28 @@ wallet-cli stake freeze --amount-sun <n> [--resource energy|bandwidth]
 默认——质押 1,000 TRX 换取能量，返回**已提交**的回执：
 
 ```bash
-echo "$PW" | wallet-cli stake freeze --amount-sun 1000000000 --resource energy --network tron:nile --password-stdin
+echo "$PW" | wallet-cli stake freeze --amount-sun 1000000000 --resource energy --network tron:3448148188 --password-stdin
 ```
 
 ```console
 ⏳ Staked 1,000 TRX for energy
   TxID    c3d...
   Status  pending — not yet on-chain
-! Track it: wallet-cli tx info --network tron:nile --txid c3d...
+! Track it: wallet-cli tx info --network tron:3448148188 --txid c3d...
 ```
 
 ```bash
-echo "$PW" | wallet-cli stake freeze --amount-sun 1000000000 --resource energy --network tron:nile --password-stdin -o json
+echo "$PW" | wallet-cli stake freeze --amount-sun 1000000000 --resource energy --network tron:3448148188 --password-stdin -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"stake.freeze","data":{"kind":"stake-freeze","stage":"submitted","txId":"c3d...","amountSun":"1000000000","resource":"energy"},"meta":{"durationMs":15,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"stake.freeze","data":{"kind":"stake-freeze","stage":"submitted","txId":"c3d...","amountSun":"1000000000","resource":"energy"},"meta":{"durationMs":15,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 加 `--wait` 可阻塞直到已确认：
 
 ```bash
-echo "$PW" | wallet-cli stake freeze --amount-sun 1000000000 --resource energy --network tron:nile --wait --password-stdin
+echo "$PW" | wallet-cli stake freeze --amount-sun 1000000000 --resource energy --network tron:3448148188 --wait --password-stdin
 ```
 
 ```console

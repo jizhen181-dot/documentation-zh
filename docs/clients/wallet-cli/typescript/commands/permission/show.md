@@ -31,38 +31,12 @@ wallet-cli permission show [options]
 
 ## 示例
 
-**从未修改过的账户**显示的是链上默认结构——active 组涵盖了所有普通操作类型：
-
-```bash
-wallet-cli permission show --account solo --network tron:nile
-```
-
-```console
-Account  solo (TWfd2K9nP4rH7gL3jM6cV1bN8yS5aQ0eXt)
-
-Permission Name   owner  (id 0)
-Threshold         1
-Authorized To     Address                             Weight
-                  TWfd2K9nP4rH7gL3jM6cV1bN8yS5aQ0eXt  1      (this wallet: solo)
-
-Permission Name   active  (id 2, active)
-Operation(s)      Activate Account · Transfer TRX · Transfer TRC10
-                  Vote · Issue TRC10 · Update Account Name
-                  TRX Stake (1.0) · TRX Unstake (1.0)
-                  Claim Voting Rewards · Create Smart Contract
-                  Trigger Smart Contract · TRX Stake (2.0)
-                  TRX Unstake (2.0) · Withdraw Unstaked TRX
-                  Delegate Resources · Reclaim Resources
-                  Cancel Unstake · …  (40 total)
-Threshold         1
-Authorized To     Address                             Weight
-                  TWfd2K9nP4rH7gL3jM6cV1bN8yS5aQ0eXt  1      (this wallet: solo)
-```
+**从未修改过的账户**显示的是链上默认的 owner 组和 active 组。active 组的完整操作集合按固定的 76 字符宽度换行（不是终端宽度）；操作标签绝不会被省略号替代。位图中无法识别的位会打印为 `Unknown contract type <id>`。
 
 **多签账户**——这里 owner 组是 2-of-3，另有一个限定范围的 `finance` active 组负责日常转账。本钱包只持有其中一个密钥（`main`）；另外两个由外部联署人持有，因此没有标注：
 
 ```bash
-wallet-cli permission show --account main --network tron:nile
+wallet-cli permission show --account main --network tron:3448148188
 ```
 
 ```console
@@ -71,25 +45,25 @@ Account  main (TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw)
 Permission Name   owner  (id 0)
 Threshold         2
 Authorized To     Address                             Weight
-                  TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw  1      (this wallet: main)
-                  TBy6mQ7Y3nJ8sD2fWpXk4LhVc9Ra1Zt5Ub  1
-                  TXe4Kd8nP2rF9gH5jL3mV6cW1bN7yS0aQz  1
+                  TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw       1  (this wallet: main)
+                  TBy6mQ7Y3nJ8sD2fWpXk4LhVc9Ra1Zt5Ub       1
+                  TXe4Kd8nP2rF9gH5jL3mV6cW1bN7yS0aQz       1
 
 Permission Name   finance  (id 2, active)
-Operation(s)      Transfer TRX · Transfer TRC10 · Trigger Smart Contract
+Operation(s)      Transfer TRX · Transfer TRC10 · Trigger Smart Contract  (3 total)
 Threshold         2
 Authorized To     Address                             Weight
-                  TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw  1      (this wallet: main)
-                  TBy6mQ7Y3nJ8sD2fWpXk4LhVc9Ra1Zt5Ub  1
-                  TXe4Kd8nP2rF9gH5jL3mV6cW1bN7yS0aQz  1
+                  TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw       1  (this wallet: main)
+                  TBy6mQ7Y3nJ8sD2fWpXk4LhVc9Ra1Zt5Ub       1
+                  TXe4Kd8nP2rF9gH5jL3mV6cW1bN7yS0aQz       1
 ```
 
 ```bash
-wallet-cli permission show --account main --network tron:nile -o json
+wallet-cli permission show --account main --network tron:3448148188 -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"permission.show","data":{"address":"TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw","owner":{"id":0,"threshold":2,"keys":[{"address":"TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw","weight":1,"local":"main"},{"address":"TBy6mQ7Y3nJ8sD2fWpXk4LhVc9Ra1Zt5Ub","weight":1,"local":null},{"address":"TXe4Kd8nP2rF9gH5jL3mV6cW1bN7yS0aQz","weight":1,"local":null}]},"witness":null,"actives":[{"id":2,"name":"finance","threshold":2,"operations":["TransferContract","TransferAssetContract","TriggerSmartContract"],"operationsHex":"0600008000000000000000000000000000000000000000000000000000000000","keys":[{"address":"TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw","weight":1,"local":"main"},{"address":"TBy6mQ7Y3nJ8sD2fWpXk4LhVc9Ra1Zt5Ub","weight":1,"local":null},{"address":"TXe4Kd8nP2rF9gH5jL3mV6cW1bN7yS0aQz","weight":1,"local":null}]}]},"meta":{"durationMs":21,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"permission.show","data":{"address":"TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw","owner":{"id":0,"name":"owner","threshold":2,"keys":[{"address":"TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw","weight":1,"local":"main"},{"address":"TBy6mQ7Y3nJ8sD2fWpXk4LhVc9Ra1Zt5Ub","weight":1,"local":null},{"address":"TXe4Kd8nP2rF9gH5jL3mV6cW1bN7yS0aQz","weight":1,"local":null}]},"witness":null,"actives":[{"id":2,"name":"finance","threshold":2,"operations":["TransferContract","TransferAssetContract","TriggerSmartContract"],"operationLabels":["Transfer TRX","Transfer TRC10","Trigger Smart Contract"],"operationsHex":"0600008000000000000000000000000000000000000000000000000000000000","unknownOperationIds":[],"keys":[{"address":"TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw","weight":1,"local":"main"},{"address":"TBy6mQ7Y3nJ8sD2fWpXk4LhVc9Ra1Zt5Ub","weight":1,"local":null},{"address":"TXe4Kd8nP2rF9gH5jL3mV6cW1bN7yS0aQz","weight":1,"local":null}]}]},"meta":{"durationMs":21,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出
@@ -97,16 +71,18 @@ wallet-cli permission show --account main --network tron:nile -o json
 | 字段 | 类型 | 含义 |
 |---|---|---|
 | `address` | string | 被查询的账户 |
-| `owner` | object | owner 组 `{id, threshold, keys[]}` |
+| `owner` | object | owner 组 `{id, name, threshold, keys[]}` |
 | `witness` | object \| null | witness 组（仅超级代表有），否则为 `null` |
-| `actives[]` | array | active 组，每项为 `{id, name, threshold, operations[], operationsHex, keys[]}` |
+| `actives[]` | array | active 组，每项为 `{id, name, threshold, operations[], operationLabels[], operationsHex, unknownOperationIds[], keys[]}` |
 | `…operations[]` | string[] | 该 active 组可执行的合约类型名 |
+| `…operationLabels[]` | string[] | 与已知操作 id 一一对应的人类可读标签 |
 | `…operationsHex` | string | 原始的 32 字节操作位图，hex |
+| `…unknownOperationIds[]` | number[] | 本版本无法映射到已知合约类型的置位；全部操作都已识别时为空数组 |
 | `…keys[]` | array | 组内的密钥：`{address, weight, local}`——若由本地持有，`local` 为钱包标签，否则为 `null` |
 
 ## 退出码
 
-`0` 成功 · `1` 执行失败（`rpc_error`） · `2` 用法错误（`invalid_value`；地址未激活 / 链上不存在时为 `not_found`）。
+`0` 成功 · `1` 执行失败（`not_found`——地址未激活 / 链上不存在；`rpc_error`） · `2` 用法错误（`invalid_value`）。
 
 ## 另请参见
 

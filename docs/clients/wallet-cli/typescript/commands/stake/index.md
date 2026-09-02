@@ -6,6 +6,8 @@
 解质押恢复为质押状态；`delegate` / `undelegate` 用于代理和收回资源。建议在操作前通过只读命令
 `info` 和 `delegated` 查看当前状态。
 
+**仅限 TRON。** 为带宽/能量而做的质押是 TRON 的协议特性；本组每一条子命令在 EVM 网络上都会以 `family_mismatch` 失败。
+
 ## 用法
 
 ```

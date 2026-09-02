@@ -1,12 +1,12 @@
 # GasFree 转账
 
-Wallet-cli 支持 GasFree 集成——通过 GasFree 服务进行免 gas 的 TRC20 转账。
+wallet-cli 支持集成 GasFree 服务，用于发起免 Gas 的 TRC20 转账。
 
 更多细节参见 [GasFree 文档](https://gasfree.io/specification)和
 [TronLink 的 GasFree 用户指南](https://support.tronlink.org/hc/en-us/articles/38903684778393-GasFree-User-Guide)。
 
-**前置条件。** 你必须从 GasFree 获取 **API Key** 和 **API Secret** 用于鉴权，并在
-[`config.conf`](../reference/config.md) 中设置它们。API 鉴权的配置方式参见官方
+**前置条件。** 需要从 GasFree 获取用于鉴权的 **API Key** 和 **API Secret**，并在
+[`config.conf`](../reference/config.md) 中完成配置。申请方式参见官方
 [申请表](https://docs.google.com/forms/d/e/1FAIpQLSc5EB1X8JN7LA4SAVAG99VziXEY6Kv6JxmlBry9rUBlwI-GaQ/viewform)。
 
 ## GasFreeInfo
@@ -18,7 +18,6 @@ Wallet-cli 支持 GasFree 集成——通过 GasFree 服务进行免 gas 的 TRC
 
 ```console
 wallet> gasfreeinfo
-balanceOf(address):70a08231
 {
 	"gasFreeAddress":"TCtSt8fCkZcVdrGpaVHUr6P8EmdjysswMF",
 	"active":true,
@@ -34,7 +33,6 @@ gasFreeInfo:  successful !!
 
 ```console
 wallet> gasfreeinfo TRvVXgqddDGYRMx3FWf2tpVxXQQXDZxJQe
-balanceOf(address):70a08231
 {
 	"gasFreeAddress":"TCtSt8fCkZcVdrGpaVHUr6P8EmdjysswMF",
 	"active":true,
@@ -48,12 +46,13 @@ gasFreeInfo:  successful !!
 
 ## GasFreeTransfer
 
-提交一笔免 gas 的 token 转账请求。
+提交一笔免 Gas 的 token 转账请求。
 
 ```console
 wallet> gasfreetransfer TEkj3ndMVEmFLYaFrATMwMjBRZ1EAZkucT 100000
 
-GasFreeTransfer result: {
+GasFreeTransfer result:
+{
 	"code":200,
 	"data":{
 		"amount":100000,
@@ -85,7 +84,8 @@ GasFreeTransfer  successful !!!
 
 ```console
 wallet> gasfreetrace 6c3ff67e-0bf4-4c09-91ca-0c7c254b01a0
-GasFreeTrace result: {
+GasFreeTrace result:
+{
 	"code":200,
 	"data":{
 		"amount":100000,
@@ -120,4 +120,4 @@ GasFreeTrace:  successful!!
 ## 另请参见
 
 - [reference/config](../reference/config.md)——GasFree API key / secret 的设置
-- [usdt](usdt.md)——常规（非免 gas）TRC20 转账
+- [usdt](usdt.md)——常规（非免 Gas）TRC20 转账

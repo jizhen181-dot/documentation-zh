@@ -10,7 +10,7 @@ wallet-cli chain params [--key <name>] [options]
 
 ## 说明
 
-列出链的治理参数——由 SR 提案修改的全网系统设置（本 CLI 不负责创建提案）。`--key` 只返回其中一个。参数键原样透传，与链返回的完全一致；文本输出会为已知的数值型键加上千位分隔符和单位（SUN / ms），`-o json` 保留原始值。
+列出链的治理参数——由 SR 提案修改的全网系统设置（参见 [`proposal create`](../proposal/create.md)）；本命令只负责读取。**仅限 TRON**：EVM 网络没有这样一套参数，会以 `family_mismatch` 失败。`--key` 只返回其中一个。参数键原样透传，与链返回的完全一致；文本输出会为已知的数值型键加上千位分隔符和单位（SUN / ms），`-o json` 保留原始值。
 
 常用的键：
 
@@ -37,7 +37,7 @@ wallet-cli chain params [--key <name>] [options]
 用 `--key` 查询单个参数：
 
 ```bash
-wallet-cli chain params --key getEnergyFee --network tron:nile
+wallet-cli chain params --key getEnergyFee --network tron:3448148188
 ```
 
 ```console
@@ -48,7 +48,7 @@ Value  210 SUN
 全部参数（节选）：
 
 ```bash
-wallet-cli chain params --network tron:nile
+wallet-cli chain params --network tron:3448148188
 ```
 
 ```console
@@ -62,11 +62,11 @@ wallet-cli chain params --network tron:nile
 ```
 
 ```bash
-wallet-cli chain params --network tron:nile -o json
+wallet-cli chain params --network tron:3448148188 -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"chain.params","data":{"params":[{"key":"getEnergyFee","value":210},{"key":"getTransactionFee","value":1000},{"key":"getCreateAccountFee","value":100000}]},"meta":{"durationMs":19,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"chain.params","data":{"params":[{"key":"getEnergyFee","value":210},{"key":"getTransactionFee","value":1000},{"key":"getCreateAccountFee","value":100000}]},"meta":{"durationMs":19,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出
@@ -76,11 +76,11 @@ wallet-cli chain params --network tron:nile -o json
 | 字段 | 类型 | 含义 |
 |---|---|---|
 | `key` | string | 参数名，与链上返回的完全一致 |
-| `value` | number | 链上原始值，不带单位后缀（单位由文本输出补上：SUN / ms） |
+| `value` | number | 链上原始值，不带单位后缀（单位由文本输出补上：SUN / ms）。若节点报告某参数时不带值，该字段会整个缺席。承载它的端口类型标注为 `number \| string`，但其背后的 TronWeb 网关只会给出数字 |
 
 ## 退出码
 
-`0` 成功 · `1` 执行失败（`rpc_error`；`not_found`——`--key` 指定的参数不存在） · `2` 用法错误（`invalid_value`）。
+`0` 成功 · `1` 执行失败（`rpc_error`） · `2` 用法错误（`not_found`——`--key` 指定的参数不存在；`invalid_value`）。
 
 ## 另请参见
 

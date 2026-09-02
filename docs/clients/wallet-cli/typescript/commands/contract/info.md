@@ -10,7 +10,9 @@ wallet-cli contract info --contract <address> [options]
 
 ## 说明
 
-获取已部署合约的 ABI 与元数据（合并了 `getContract` 与 `getContractInfo`）：名称、方法列表、`origin` 地址、`bytecode`、能量相关设置。在动手写 [`contract call`](call.md) / [`contract send`](send.md) 之前很有用——ABI 会告诉你准确的方法签名。只读——不涉及账户或密码。
+获取已部署合约的 ABI 与元数据（合并了 `getContract` 与 `getContractInfo`），包括名称、方法列表、`origin` 地址、`bytecode` 和能量相关设置。在使用 [`contract call`](call.md) 或 [`contract send`](send.md) 前，可通过 ABI 确认准确的方法签名。该命令只读，不涉及账户或密码。
+
+**仅限 TRON。** 链上 ABI 登记表是 TRON 的协议特性；EVM 链不在链上保存 ABI，因此在 EVM 网络上本命令会以 `family_mismatch` 失败。
 
 ## 选项
 
@@ -23,7 +25,7 @@ wallet-cli contract info --contract <address> [options]
 ## 示例
 
 ```bash
-wallet-cli contract info --contract TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf --network tron:nile
+wallet-cli contract info --contract TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf --network tron:3448148188
 ```
 
 ```console
@@ -33,11 +35,11 @@ Methods   33 (name / deprecate / approve …)
 ```
 
 ```bash
-wallet-cli contract info --contract TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf --network tron:nile -o json
+wallet-cli contract info --contract TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf --network tron:3448148188 -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"contract.info","data":{"address":"TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf","name":"TetherToken","functionCount":33,"methods":["name","deprecate","approve","deprecated","addBlackList","totalSupply","transferFrom","…"],"contract":{"origin_address":"41…","contract_address":"41…","abi":{},"bytecode":"…","name":"TetherToken"},"info":{"smart_contract":{},"runtimecode":"…","contract_state":{}}},"meta":{"durationMs":15,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"contract.info","data":{"address":"TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf","name":"TetherToken","functionCount":33,"methods":["name","deprecate","approve","deprecated","addBlackList","totalSupply","transferFrom","…"],"contract":{"origin_address":"41…","contract_address":"41…","abi":{},"bytecode":"…","name":"TetherToken"},"info":{"smart_contract":{},"runtimecode":"…","contract_state":{}}},"meta":{"durationMs":15,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出

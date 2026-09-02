@@ -1,6 +1,6 @@
 # 能量与带宽
 
-TRON 的费用模型，以及 `stake` 为何存在。先说单位：**1 TRX = 1,000,000 SUN**；所有名为 `*-sun` 的 CLI 参数以及所有 JSON 中的金额都是原始 SUN 字符串。
+本页介绍 TRON 的费用模型，以及使用 `stake` 的原因。**仅限 TRON**——EVM 网络使用 gas 为交易计价，参见[网络 → `evm-gas` 模型](networks.md#fees-the-evm-gas-model)。基本单位为 **1 TRX = 1,000,000 SUN**，所有名为 `*-sun` 的 CLI 参数都以 SUN 计。JSON 中的数值同样使用 SUN，但类型并不统一：余额等 int64 量级的金额为十进制字符串，`feeSun`、`multiSignFeeSun`、`energyUsed`、`netUsed` 等有界的计数和费用则可能是 JSON 数字。请以各命令的字段表为准，不要假定它们采用同一种类型；参见 [machine-interface](../machine-interface.md#the-result-envelope)。
 
 ## 用两种资源代替 gas
 
@@ -9,12 +9,12 @@ TRON 的费用模型，以及 `stake` 为何存在。先说单位：**1 TRX = 1,
 | **带宽** | 每笔交易的字节数 | 每个账户每天有少量配额 |
 | **能量** | 智能合约执行（包括 TRC20 转账） | 无 |
 
-当一笔交易所需超过你所拥有的量时，节点会从你的余额中**燃烧 TRX** 来补足差额。对于合约调用，`--fee-limit`（用于 `tx send` / `contract` 命令，默认 100000000 SUN）会给这份燃烧设上限——它是一道安全阀，防止有缺陷或恶意的合约无限制地消耗能量。
+当交易所需资源超过账户现有额度时，节点会从余额中**燃烧 TRX** 来补足差额。对于合约调用，`--fee-limit`（用于 `tx send` / `contract` 命令，默认 100000000 SUN）用于限制最多可燃烧的 TRX，避免有缺陷或恶意的合约无限制消耗能量。
 
 可以随时查看当前资源状态：
 
 ```bash
-wallet-cli account info --network tron:nile -o json | jq '.data.resources'
+wallet-cli account info --network tron:3448148188 -o json | jq '.data.resources'
 ```
 
 ```json
@@ -38,7 +38,7 @@ wallet-cli account info --network tron:nile -o json | jq '.data.resources'
 
 ## 实际影响
 
-- "免费"的 TRX 转账并不总是免费：超出带宽配额之后就会燃烧 TRX。
+- “免费”的 TRX 转账并不一定免费：超出带宽配额后仍会燃烧 TRX。
 - 能量不足时，TRC20 转账会燃烧更多 TRX。操作前可通过 `--dry-run` 的 `fee` 字段查看预估费用。
 - 发送时出现提到 bandwidth/energy/balance 的 `rpc_error` → 请充值、质押，或者等待每日配额刷新；见[故障排查](../troubleshooting.md#rpc_error-exit-1)。
 

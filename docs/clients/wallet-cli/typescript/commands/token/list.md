@@ -10,7 +10,9 @@ wallet-cli token list [options]
 
 ## 说明
 
-列出当前账户（或 `--account` 指定的账户）在所选网络上可见的全部 token：内置的 **official** 层，加上你自己添加的 **user** 条目。`source` 列用于区分两者。`tx send --token <symbol>` 解析符号时用的就是这张表。只读，只涉及本地数据和元数据——不需要密码。
+列出当前账户（或 `--account` 指定的账户）在所选网络上可见的全部 token：内置的 **official** 层，加上你自己添加的 **user** 条目。`source` 列用于区分两者。`tx send --token <symbol>` 解析符号时用的就是这张表。只读，且完全在本地完成——不需要密码，也不访问任何节点。
+
+这张表是按网络划分的，因此同一条命令在 `tron:3448148188` 和 `eip155:11155111` 上列出的 token 并不相同。
 
 ## 选项
 
@@ -19,23 +21,29 @@ wallet-cli token list [options]
 ## 示例
 
 ```bash
-wallet-cli token list --network tron:nile
+wallet-cli token list --network tron:3448148188
 ```
 
 ```console
-| Symbol | Name       | Source | Contract / ID                      |
-| ------ | ---------- | ------ | ---------------------------------- |
-| USDT   | Tether USD | user   | TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf |
+| Symbol | Name            | Source   | Contract / ID                      |
+| ------ | --------------- | -------- | ---------------------------------- |
+| USDT   | Tether USD      | official | TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf |
+| USDD   | Usdd Stablecoin | official | TYQF9cAeJ3Faq8QXpHxTcFco72DRCQbgFt |
 ```
 
-> `official` 层只在**主网**上内置（例如 USDT、USDC）；测试网没有 official 层，因此列出的每一条都是你用 `token add` 添加的 `user` 条目。
+> `official` 层是按网络内置的，并非每个网络都有。没有内置条目的网络，只会列出你用 `token add` 添加的内容——在此之前是一张空表：
+>
+> ```console
+> | Symbol | Name | Source | Contract / ID |
+> | ------ | ---- | ------ | ------------- |
+> ```
 
 ```bash
-wallet-cli token list --network tron:nile -o json
+wallet-cli token list --network tron:3448148188 -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"token.list","data":{"network":"tron:nile","account":"wlt_b2.0","tokens":[{"kind":"trc20","id":"TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf","symbol":"USDT","decimals":6,"name":"Tether USD","source":"user"}]},"meta":{"durationMs":13,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"token.list","data":{"network":"tron:3448148188","account":"wlt_n5v4r992","tokens":[{"kind":"trc20","id":"TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf","symbol":"USDT","decimals":6,"name":"Tether USD","source":"official"},{"kind":"trc20","id":"TYQF9cAeJ3Faq8QXpHxTcFco72DRCQbgFt","symbol":"USDD","decimals":18,"name":"Usdd Stablecoin","source":"official"}]},"meta":{"durationMs":15,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出
@@ -44,8 +52,8 @@ wallet-cli token list --network tron:nile -o json
 
 | 字段 | 类型 | 含义 |
 |---|---|---|
-| `kind` | string | `trc20` / `trc10` |
-| `id` | string | 合约地址或资产 id |
+| `kind` | string | `trc20` / `trc10`（TRON）或 `erc20`（EVM） |
+| `id` | string | 合约地址，或 TRC10 资产 id |
 | `symbol` | string | Token 符号（`tx send --token` 用的就是它） |
 | `decimals` | number | token 精度 |
 | `name` | string | token 名称 |

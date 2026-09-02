@@ -14,7 +14,7 @@ wallet-cli exchange show <id> [options]
 
 **这里不显示价格。** 两侧储备之比只是一个报价，仅在交易规模趋近于零时才成立；任何有实际成交量的交易都会沿曲线走得更远，换回的更少。把它打印出来只会诱使人把它当成可执行价格。要针对当前储备为某个具体数量定价，请运行 [`exchange trade --dry-run`](trade.md)。
 
-与 [`exchange list`](list.md) 不同，本命令会解析每一侧的名称和精度，因此**这里的储备按完整 token 打印**，json 也在原始余额之外携带 `firstTokenLabel` / `firstTokenDecimals` 以及对应的 `second*` 字段。于是同一个交易对在这里显示为 `66.72`，在 list 中则是 `6,672`。
+与 [`exchange list`](list.md) 不同，本命令会解析两侧 token 的名称和精度，因此**储备量按完整 token 显示**。JSON 除原始余额外，还包含 `firstTokenLabel` / `firstTokenDecimals` 以及对应的 `second*` 字段。同一个交易对在本命令中可能显示为 `66.72`，而在 `exchange list` 中显示为最小单位数量 `6,672`。
 
 `pair` 以及 `first*` / `second*` 字段都遵循链上存储的顺序，也就是创建者当初给出的顺序——TRX 不会被规范化到固定的某一侧。text 输出把两侧按同样的顺序汇总成一个 `Reserves` 块。
 
@@ -29,7 +29,7 @@ wallet-cli exchange show <id> [options]
 ## 示例
 
 ```bash
-wallet-cli exchange show 12 --network tron:nile
+wallet-cli exchange show 12 --network tron:3448148188
 ```
 
 ```console
@@ -42,11 +42,11 @@ Exchange id 12
 ```
 
 ```bash
-wallet-cli exchange show 12 --network tron:nile -o json
+wallet-cli exchange show 12 --network tron:3448148188 -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"exchange.show","data":{"kind":"exchange-show","exchangeId":12,"pair":"TRX:1000123","creatorAddress":"TQkXm4vN...","createTime":1785662100000,"firstTokenId":"_","firstTokenBalance":"10000000000","firstTokenLabel":"TRX","firstTokenDecimals":6,"secondTokenId":"1000123","secondTokenBalance":"500000000000","secondTokenLabel":"MyToken","secondTokenDecimals":6},"meta":{"durationMs":24,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"exchange.show","data":{"kind":"exchange-show","exchangeId":12,"pair":"TRX:1000123","creatorAddress":"TQkXm4vN...","createTime":1785662100000,"firstTokenId":"_","firstTokenBalance":"10000000000","firstTokenLabel":"TRX","firstTokenDecimals":6,"secondTokenId":"1000123","secondTokenBalance":"500000000000","secondTokenLabel":"MyToken","secondTokenDecimals":6},"meta":{"durationMs":24,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出

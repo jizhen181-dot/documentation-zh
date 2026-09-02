@@ -23,7 +23,7 @@ wallet-cli reward withdraw [--dry-run | (--sign-only | --build-only) [--expirati
 |---|---|
 | `--dry-run` | 只构建和估算，不签名/不广播；与 `--sign-only` / `--build-only` 互斥 |
 | `--sign-only` | 只签名不广播，输出已签名的 hex；与 `--dry-run` / `--build-only` 互斥；配合 `--expiration` 使用 |
-| `--build-only` | 只构建，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
+| `--build-only` | 构建并估算，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
 | `--expiration <ms>` | 交易过期时间（毫秒），最大 `86400000`（24 小时）；仅可与 `--sign-only` 或 `--build-only` 同用；省略时使用节点默认值（约 60 秒） |
 | `--permission-id <n>` | 用于签名的权限组（0=owner，1=witness，2-9=active）；默认 `0` |
 | `--wait` / `--wait-timeout <ms>` | 广播后轮询直到已确认/失败（上限默认取配置 `waitTimeoutMs`，内置 60000） |
@@ -38,38 +38,38 @@ wallet-cli reward withdraw [--dry-run | (--sign-only | --build-only) [--expirati
 默认——广播并返回**已提交**的回执：
 
 ```bash
-echo "$PW" | wallet-cli reward withdraw --network tron:nile --password-stdin
+echo "$PW" | wallet-cli reward withdraw --network tron:3448148188 --password-stdin
 ```
 
 ```console
-⏳ Submitted — withdraw voting/block rewards
-  TxID     a1b...
-  Amount   123.456789 TRX
-  Status   pending — next withdrawal available in ~24h
-! Track it: wallet-cli tx info --network tron:nile --txid a1b...
+⏳ Withdrew voting/block rewards
+  Amount  123.456789 TRX
+  TxID    a1b...
+  Status  pending — next withdrawal available in ~24h
+! Track it: wallet-cli tx info --network tron:3448148188 --txid a1b...
 ```
 
 ```bash
-echo "$PW" | wallet-cli reward withdraw --network tron:nile --password-stdin -o json
+echo "$PW" | wallet-cli reward withdraw --network tron:3448148188 --password-stdin -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"reward.withdraw","data":{"kind":"reward-withdraw","stage":"submitted","txId":"a1b...","rewardSun":"123456789"},"meta":{"durationMs":17,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"reward.withdraw","data":{"kind":"reward-withdraw","stage":"submitted","txId":"a1b...","rewardSun":"123456789"},"meta":{"durationMs":17,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 加上 `--wait` 可阻塞直到已确认（回执中会带上真实的区块号 / 手续费）：
 
 ```bash
-echo "$PW" | wallet-cli reward withdraw --network tron:nile --wait --password-stdin
+echo "$PW" | wallet-cli reward withdraw --network tron:3448148188 --wait --password-stdin
 ```
 
 ```console
 ✅ Withdrew voting/block rewards
-  TxID     c7d...
-  Amount   123.456789 TRX
-  Block    84,121,010
-  Fee      0.268 TRX
-  Status   success — next withdrawal available in ~24h
+  Amount  123.456789 TRX
+  TxID    c7d...
+  Block   #84,121,010
+  Fee     0.268 TRX
+  Status  success — next withdrawal available in ~24h
 ```
 
 ## 输出

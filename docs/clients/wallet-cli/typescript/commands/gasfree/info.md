@@ -23,26 +23,26 @@ wallet-cli gasfree info [options]
 ## 示例
 
 ```bash
-wallet-cli gasfree info --account main --network tron:nile
+wallet-cli gasfree info --account main --network tron:3448148188
 ```
 
 ```console
-Account          main (TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw)
+Owner            TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw
 GasFree address  TVjsyZ7fYF3qCcNaMxN5PMWmSgYcCyqZfw
 Status           active
 Nonce            4
 
-Supported tokens (1)
-  Token  Activation fee  Transfer fee
-  USDT   1 USDT          0.5 USDT
+| Token | Balance  | Activation fee | Transfer fee |
+| ----- | -------- | -------------- | ------------ |
+| USDT  | 125 USDT | 1 USDT         | 0.5 USDT     |
 ```
 
 ```bash
-wallet-cli gasfree info --account main --network tron:nile -o json
+wallet-cli gasfree info --account main --network tron:3448148188 -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"gasfree.info","data":{"ownerAddress":"TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw","gasFreeAddress":"TVjsyZ7fYF3qCcNaMxN5PMWmSgYcCyqZfw","active":true,"nonce":4,"tokens":[{"symbol":"USDT","address":"TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t","decimals":6,"activateFee":"1000000","transferFee":"500000"}]},"meta":{"durationMs":380,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"gasfree.info","data":{"ownerAddress":"TQkXm4vN8pR2sD6fWbYc3LhJa9Ee5Zt7Uw","gasFreeAddress":"TVjsyZ7fYF3qCcNaMxN5PMWmSgYcCyqZfw","active":true,"nonce":"4","tokens":[{"symbol":"USDT","address":"TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf","decimals":6,"activateFee":"1000000","transferFee":"500000","balance":"125000000"}]},"meta":{"durationMs":380,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出
@@ -52,12 +52,12 @@ wallet-cli gasfree info --account main --network tron:nile -o json
 | `ownerAddress` | string | 该账户自身的 TRON 地址 |
 | `gasFreeAddress` | string | 派生出的 GasFree 地址（收付款都用它） |
 | `active` | boolean | GasFree 地址是否已在链上激活 |
-| `nonce` | number | 该地址当前的 `nonce` |
-| `tokens[]` | array | 受支持的 token：`{symbol, address, decimals, activateFee, transferFee}`——费用以该 token 的最小单位计 |
+| `nonce` | string | 该地址当前的 `nonce`，以无符号十进制字符串给出 |
+| `tokens[]` | array | 受支持的 token：`{symbol, address, decimals, activateFee, transferFee, balance}`——费用和余额都是以该 token 最小单位计的十进制字符串 |
 
 ## 退出码
 
-`0` 成功 · `1` 执行失败（`gasfree_credentials_missing`；`gasfree_integrity`——服务方在 token 列表与地址响应中给出的费用元数据自相矛盾；`provider_error`——服务出错 / 触发限流；`unsupported_network`） · `2` 用法错误（`invalid_value`）。
+`0` 成功 · `1` 执行失败（`gasfree_integrity`——服务方在 token 列表与地址响应中给出的费用元数据自相矛盾；`provider_error`——服务出错、返回了格式错误或过大的 JSON、返回了本 CLI 不会据以行事的字段，或返回了任何非 429 的错误状态码；`provider_rate_limited`——服务返回了 429，若它给出了 `Retry-After`，则在 `details.retryAfter` 中） · `2` 用法错误（`gasfree_credentials_missing`、`unsupported_network`、`invalid_value`）。
 
 ## 另请参见
 

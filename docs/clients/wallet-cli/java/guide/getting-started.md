@@ -1,21 +1,20 @@
 # 快速上手
 
-首次运行的流程：构建、创建账户、解锁、查看，并发送第一笔 TRX——全部在交互式提示符中完成。
+本页介绍首次运行流程：构建 wallet-cli、创建并解锁账户、查看账户信息，以及发送第一笔 TRX。所有操作
+都在交互式提示符中完成。
 
-## 快速上手
-
-构建、创建账户并发出第一笔转账——全部在交互式提示符中完成：
+## 构建并发送第一笔交易
 
 ```console
 # 1. 构建
 $ git clone https://github.com/tronprotocol/wallet-cli.git
-$ cd wallet-cli && ./gradlew build && cd build/libs
+$ cd wallet-cli/java && ./gradlew build && cd build/libs
 
 # 2. 启动交互式钱包
 $ java -jar wallet-cli.jar
 
 # 3. 在钱包提示符下：创建账户（或使用 ImportWallet）、解锁并查看
-> RegisterWallet 123456      # 创建密码为 123456 的 keystore
+> RegisterWallet             # 先两次提示输入密码，再询问助记词长度
 > Login                      # 解锁账户
 > GetAddress                 # 显示你的地址
 > GetBalance                 # TRX 余额

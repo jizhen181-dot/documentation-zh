@@ -1,6 +1,6 @@
 # wallet-cli import keystore
 
-从 Web3 keystore 文件导入一个账户。**仅交互式。**
+导入一个 Web3 keystore 文件。**仅交互式。**
 
 > **注意**：这里没有任何 stdin 选项。master password 和 keystore 文件自身的密码**只能**通过隐藏的 TTY 提示输入——文件密码同样属于敏感密钥材料。
 
@@ -45,6 +45,7 @@ wallet-cli import keystore ./tronlink-export.json --label imported
   Account ID    wlt_7h2k9m1a
   Type          private key
   TRON address  TZx9kP2m...7bWq
+  EVM address   0xe4aAd11792F7E74f1B5cbce65f9a1E207c952961
   Active        yes
 
 ⚠️ The keystore password was read from hidden input and was not printed.
@@ -57,7 +58,7 @@ wallet-cli import keystore ./tronlink-export.json --label imported -o json
 ```console
 ? Master password (hidden):
 ? Keystore file password (hidden):
-{"schema":"wallet-cli.result.v1","success":true,"command":"import.keystore","data":{"status":"created","accountId":"wlt_7h2k9m1a","label":"imported","type":"privateKey","index":null,"active":true,"addresses":{"tron":"TZx9kP2m...7bWq"}},"meta":{"durationMs":44,"warnings":[]}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"import.keystore","data":{"status":"created","accountId":"wlt_7h2k9m1a","label":"imported","type":"privateKey","index":null,"active":true,"addresses":{"tron":"TZx9kP2m...7bWq","evm":"0xe4aAd11792F7E74f1B5cbce65f9a1E207c952961"},"derivationPath":null},"meta":{"durationMs":44,"warnings":[]}}
 ```
 
 ## 输出
@@ -72,11 +73,12 @@ wallet-cli import keystore ./tronlink-export.json --label imported -o json
 | `type` | string | `"privateKey"`（独立私钥，没有 seed） |
 | `index` | number \| null | 非 HD 账户，恒为 `null` |
 | `active` | boolean | 是否成为当前账户 |
-| `addresses.tron` | string | Base58 TRON 地址 |
+| `addresses` | object | 所导入密钥的两种编码形式：`tron`（base58）和 `evm`（EIP-55） |
+| `derivationPath` | null | Web3 keystore 只包含一把原始密钥，没有派生路径 |
 
 ## 退出码
 
-`0` 导入成功 · `1` 执行失败（`keystore_not_found`——文件不存在；`invalid_keystore`——不是合法的 keystore JSON；`wrong_keystore_password`；`account_exists`——该地址已在钱包中；`auth_failed`；`io_error`） · `2` 用法错误（`tty_required`——没有可用于交互输入的 TTY，此项先于其他一切检查；标签重复）。
+`0` 导入成功 · `1` 执行失败（`wrong_keystore_password`；`account_exists`——该地址已在钱包中；`auth_failed`；`io_error`） · `2` 用法错误（`tty_required`——没有可用于交互输入的 TTY，此项先于其他一切检查；`keystore_not_found`——文件不存在；`invalid_keystore`——不是合法的 keystore JSON；`invalid_value`——标签重复或非法）。
 
 ## 另请参见
 

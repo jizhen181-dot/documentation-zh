@@ -1,9 +1,8 @@
 # 命令参考
 
-命令按下面的分类页面分组；A–Z 索引把每条命令链接到它所属的页面。每个分类页面都有内容。链接指向
-所属页面（打开后跳转到该命令的章节）。
+命令按功能分组到以下页面；A–Z 索引可直接跳转到每条命令所在的章节。
 
-在交互式钱包中输入任意命令即可看到它内置的用法提示。
+在交互式钱包中执行 `help <command>` 即可看到该命令内置的用法提示；单独执行 `help` 会打印完整的命令表。只输入命令名并不一定会显示用法——大多数无需参数的命令会直接执行。
 
 ## 按分类
 
@@ -16,7 +15,7 @@
 | USDT 与 TRC20 | [usdt.md](usdt.md) |
 | 质押（Stake 2.0） | [stake-v2.md](stake-v2.md) |
 | 质押（Stake 1.0，旧版） | [stake-v1-legacy.md](stake-v1-legacy.md) |
-| 资源价格与提取 | [resources.md](resources.md) |
+| 资源价格与备注手续费 | [resources.md](resources.md) |
 | 投票、奖励与见证人 | [vote-reward.md](vote-reward.md) |
 | 智能合约 | [contract.md](contract.md) |
 | 提案 | [proposals.md](proposals.md) |

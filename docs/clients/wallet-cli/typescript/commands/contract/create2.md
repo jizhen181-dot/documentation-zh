@@ -10,7 +10,7 @@ wallet-cli contract create2 --deployer <address> (--code <hex> | --code-file <pa
 
 ## 说明
 
-纯本地运算：不访问节点、不广播，也不涉及任何账户或密码。结果在所有 TRON 网络上都一致，因此 `--network` 对它没有影响。
+纯本地运算：不访问节点、不广播，也不涉及任何账户或密码。结果在所有 TRON 网络上都一致，因此 `--network` 对它没有影响。仅限 TRON——在 EVM 网络上本命令会以 `family_mismatch` 失败。
 
 **TRON 的推导方式与以太坊不同**——不要拿 EVM 的计算器来算。地址为
 
@@ -60,7 +60,7 @@ wallet-cli contract create2 --deployer TQkXm4vN...5Zt7Uw --code 6080604052... --
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"contract.create2","data":{"deployerAddress":"TQkXm4vN...","salt":255,"saltHex":"0x00000000000000000000000000000000000000000000000000000000000000ff","codeHash":"c8f4a1...b91b","address":"TWq8dK3n...2mHb"},"meta":{"durationMs":3,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"contract.create2","data":{"deployerAddress":"TQkXm4vN...","salt":255,"saltHex":"0x00000000000000000000000000000000000000000000000000000000000000ff","codeHash":"c8f4a1...b91b","address":"TWq8dK3n...2mHb"},"meta":{"durationMs":3,"warnings":[]},"chain":{"family":"tron","network":"tron:728126428","chainId":"728126428"}}
 ```
 
 ## 输出
@@ -68,16 +68,16 @@ wallet-cli contract create2 --deployer TQkXm4vN...5Zt7Uw --code 6080604052... --
 | 字段 | 类型 | 含义 |
 |---|---|---|
 | `deployerAddress` | string | 传入的 `deployer`，base58 格式 |
-| `salt` | number | 传入的 `salt`，十进制 |
+| `salt` | number \| string | 传入的 `salt`，十进制。当它超出安全整数范围时是**字符串**，这样完整的 int64 salt 才能在 JSON 中原样保留 |
 | `saltHex` | string | 真正参与哈希计算的、补零后的 32 字节 |
 | `codeHash` | string | `creation bytecode` 的 `keccak256` |
 | `address` | string | 推导出的合约地址，base58 格式 |
 
-这是本地命令，因此响应中没有 `chain` 字段。
+本命令从不访问节点，但它仍然是一条 TRON 链上命令：响应中会照常带上所选网络的 `chain` 块。这里的 `--network` 是可选的，只决定这个块里写的是哪个网络。
 
 ## 退出码
 
-`0` 成功 · `1` 执行失败（`io_error`——`--code-file` 读不了） · `2` 用法错误（`missing_option`——缺少 `--deployer` / `--salt`，或两个 `code` 来源都没给；`invalid_option`——`--code` 和 `--code-file` 同时给出；`invalid_value`——`deployer` 地址格式非法、`code` 不是合法 hex，或 `salt` 超出 64 位有符号范围）。
+`0` 成功 · `1` 执行失败 · `2` 用法错误（`missing_option`——缺少 `--deployer` 或 `--salt`；`file_not_found`——`--code-file` 不存在；`invalid_value`——两个 code 来源都没给或都给了、code 文件读不了、`deployer` 地址格式非法、`code` 不是合法 hex，或 `salt` 超出 64 位有符号范围）。
 
 ## 另请参见
 

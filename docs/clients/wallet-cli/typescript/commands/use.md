@@ -25,6 +25,7 @@ wallet-cli use main-1
 ```console
 ✅ Active account: main-1
   TRON address  TRs9HgTuY3dT3yDasdFdP9WQHqL37891Ax
+  EVM address   0xf3ec542047Fe61E0b753a7EBca95B27a672F9cbe
 ```
 
 也可以用 accountId 或地址来指定：`wallet-cli use wlt_758891fa.1` / `wallet-cli use TRs9Hg…`。
@@ -34,7 +35,7 @@ wallet-cli use main-1 -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"use","data":{"previous":"wlt_758891fa.0","accountId":"wlt_758891fa.1","label":"main-1","type":"seed","index":1,"active":true,"addresses":{"tron":"TRs9HgTuY3dT3yDasdFdP9WQHqL37891Ax"},"seedId":"wlt_758891fa"},"meta":{"durationMs":14,"warnings":[]}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"use","data":{"previous":"wlt_758891fa.0","accountId":"wlt_758891fa.1","label":"main-1","type":"seed","index":1,"active":true,"addresses":{"tron":"TRs9HgTuY3dT3yDasdFdP9WQHqL37891Ax","evm":"0xf3ec542047Fe61E0b753a7EBca95B27a672F9cbe"},"seedId":"wlt_758891fa","derivationPath":{"tron":"m/44'/195'/1'/0/0","evm":"m/44'/60'/0'/0/1"}},"meta":{"durationMs":14,"warnings":[]}}
 ```
 
 ## 输出
@@ -49,9 +50,10 @@ wallet-cli use main-1 -o json
 | `type` | string | `seed` / `privateKey` / `watch` / `ledger` |
 | `index` | number \| null | HD 派生索引；非 HD 账户为 `null` |
 | `active` | boolean | 始终为 `true`（刚被设为当前账户） |
-| `addresses.tron` | string | Base58 TRON 地址 |
+| `addresses` | object | 该账户能产生的每个家族各一项：`tron`（base58）和/或 `evm`（`0x`，EIP-55 校验和格式） |
+| `derivationPath` | object \| null | 派生类账户按家族给出的 BIP44 路径；`watch` / `privateKey` 从未派生过，因此为 `null` |
 | `seedId` | string | 所属种子钱包 id（仅 `seed` 账户） |
-| `family` | string | 链系，例如 `tron`（仅 `watch` 账户） |
+| `family` | string | 该账户绑定的链家族——仅单家族账户（`watch`、`ledger`）有此字段 |
 
 ## 退出码
 

@@ -67,7 +67,7 @@ wallet-cli delete main-1 --yes -o json
 |---|---|---|
 | `accountId` | string | 被删除的账户/钱包 id（子账户为 `wlt_….N`，整个钱包则为钱包 id `wlt_…`） |
 | `scope` | string | `account`（仅该账户）或 `wallet`（级联删除整个钱包） |
-| `secretRemoved` | boolean | 密钥是否被移除（删除 HD 子账户会保留 seed，为 `false`；删除整个钱包为 `true`） |
+| `secretRemoved` | boolean | 是否移除了加密的密钥材料。删除 HD 子账户会保留 seed，因此为 `false`。删除钱包时，它报告的是该钱包本身是否持有密钥：seed 钱包和私钥钱包为 `true`，Ledger 和仅观察钱包从未保存过密钥，因此为 `false` |
 | `newActive` | string \| null | 删除后新的当前账户 id；若已无剩余账户则为 `null` |
 
 ## 退出码

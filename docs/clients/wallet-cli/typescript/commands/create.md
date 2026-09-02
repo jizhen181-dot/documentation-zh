@@ -40,6 +40,7 @@ wallet-cli create --label main
   Account ID    wlt_2dbv24de.0
   Type          HD
   TRON address  TTVdGTBXY5mmY3nJFGUp7Vo898kUJ6gtFQ
+  EVM address   0x5c8e1b04A7f39d62C0B3e85A1d47F9028b6ce713
   Active        yes
 
 ⚠️ Recovery phrase is encrypted locally and was not printed.
@@ -53,7 +54,7 @@ printf '%s' "$PW" | wallet-cli create --label main --password-stdin -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"create","data":{"status":"created","accountId":"wlt_2dbv24de.0","label":"main","type":"seed","index":0,"active":true,"addresses":{"tron":"TTVdGTBXY5mmY3nJFGUp7Vo898kUJ6gtFQ"},"seedId":"wlt_2dbv24de"},"meta":{"durationMs":38,"warnings":[]}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"create","data":{"status":"created","accountId":"wlt_2dbv24de.0","label":"main","type":"seed","index":0,"active":true,"addresses":{"tron":"TTVdGTBXY5mmY3nJFGUp7Vo898kUJ6gtFQ","evm":"0x5c8e1b04A7f39d62C0B3e85A1d47F9028b6ce713"},"seedId":"wlt_2dbv24de","derivationPath":{"tron":"m/44'/195'/0'/0/0","evm":"m/44'/60'/0'/0/0"}},"meta":{"durationMs":38,"warnings":[]}}
 ```
 
 ## 输出
@@ -68,7 +69,8 @@ printf '%s' "$PW" | wallet-cli create --label main --password-stdin -o json
 | `type` | string | `"seed"`（HD 派生） |
 | `index` | number | HD 派生索引（首个账户为 0） |
 | `active` | boolean | 是否成为了当前账户 |
-| `addresses.tron` | string | Base58 TRON 地址 |
+| `addresses` | object | 该账户能产生的每个家族各一个地址：`tron`（base58）和 `evm`（`0x`，EIP-55 校验和格式） |
+| `derivationPath` | object | 每个地址各自来自的 BIP44 路径：`{"tron":"m/44'/195'/<index>'/0/0","evm":"m/44'/60'/0'/0/<index>"}` |
 | `seedId` | string | 所属种子钱包 id |
 
 ## 退出码

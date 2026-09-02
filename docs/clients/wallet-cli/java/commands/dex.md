@@ -11,8 +11,8 @@
 ```
 
 - `ownerAddress`——发起交易的账户地址。
-- `sell_token_id`、`sell_token_quantity`——你想卖出的 token 的 ID 和数量。
-- `buy_token_id`、`buy_token_quantity`——你想买入的 token 的 ID 和数量。
+- `sell_token_id`、`sell_token_quantity`——要卖出的 token ID 和数量。
+- `buy_token_id`、`buy_token_quantity`——要买入的 token ID 和数量。
 
 示例：
 
@@ -112,8 +112,8 @@ GetMarketPairList
 > GetMarketOrderListByPair sell_token_id buy_token_id
 ```
 
-- `sell_token_id`——你想卖出的 token 的 ID。
-- `buy_token_id`——你想买入的 token 的 ID。
+- `sell_token_id`——要卖出的 token ID。
+- `buy_token_id`——要买入的 token ID。
 
 示例：
 
@@ -143,8 +143,8 @@ GetMarketOrderListByPair _ 1000001
 > GetMarketPriceByPair sell_token_id buy_token_id
 ```
 
-- `sell_token_id`——你想卖出的 token 的 ID。
-- `buy_token_id`——你想买入的 token 的 ID。
+- `sell_token_id`——要卖出的 token ID。
+- `buy_token_id`——要买入的 token ID。
 
 示例：
 
@@ -171,7 +171,7 @@ GetMarketPriceByPair _ 1000001
 ```
 
 - `owner_address`——创建该订单的账户地址。
-- `order_id`——你想取消的订单 id。
+- `order_id`——要取消的订单 ID。
 
 示例：
 

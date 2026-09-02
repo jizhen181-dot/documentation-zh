@@ -18,15 +18,15 @@ wallet-cli token remove (--contract <address> | --asset-id <id>) [options]
 
 | 选项 | 说明 |
 |---|---|
-| `--contract <string>` | 要删除的 TRC20 合约地址；`--contract` / `--asset-id` 二者必选其一 |
-| `--asset-id <string>` | 要删除的 TRC10 数字资产 id；`--asset-id` / `--contract` 二者必选其一 |
+| `--contract <string>` | 要删除的 token 合约地址——TRON 上为 TRC20，EVM 上为 ERC20 |
+| `--asset-id <string>` | **仅限 TRON。** 要删除的 TRC10 数字资产 id；`--asset-id` / `--contract` 二者必选其一 |
 
 此外还有[全局选项](../index.md#global-options-every-command)。
 
 ## 示例
 
 ```bash
-wallet-cli token remove --contract TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf --network tron:nile
+wallet-cli token remove --contract TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf --network tron:3448148188
 ```
 
 ```console
@@ -36,11 +36,11 @@ wallet-cli token remove --contract TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf --network 
 ```
 
 ```bash
-wallet-cli token remove --contract TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf --network tron:nile -o json
+wallet-cli token remove --contract TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf --network tron:3448148188 -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"token.remove","data":{"network":"tron:nile","account":"wlt_b2.0","removed":{"kind":"trc20","id":"TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf","symbol":"USDT","decimals":6,"name":"Tether USD"}},"meta":{"durationMs":15,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"token.remove","data":{"network":"tron:3448148188","account":"wlt_b2.0","removed":{"kind":"trc20","id":"TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf","symbol":"USDT","decimals":6,"name":"Tether USD"}},"meta":{"durationMs":15,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出
@@ -49,11 +49,11 @@ wallet-cli token remove --contract TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf --network 
 |---|---|---|
 | `network` | string | 该条目原先所属的网络 |
 | `account` | string | 该条目原先所属的账户 |
-| `removed` | object | 被删除的 token 条目（`kind`、`id`、`symbol`、`decimals`、`name`） |
+| `removed` | object | 被删除的 token 条目（`kind`——`trc20`/`trc10`/`erc20`——以及 `id`、`symbol`、`decimals`、`name`） |
 
 ## 退出码
 
-`0` 已删除 · `1` 执行失败（`token_is_official`——official 层的 token 不能删除；`token_not_in_book`——地址簿中没有这条） · `2` 用法错误（`invalid_value`）。
+`0` 已删除 · `1` 执行失败（`encoding_error` / `io_error`——本地 token 地址簿无法解码或写入） · `2` 用法错误（`token_is_official`——official 层的 token 不能删除；`token_not_in_book`——user 层中没有这条；`invalid_value`；`invalid_option`——在 EVM 网络上使用了 `--asset-id`）。
 
 ## 另请参见
 

@@ -1,6 +1,16 @@
 # 命令参考
 
-每个命令——包括每个子命令——都有独立的页面，并遵循固定的结构（用法 · 说明 · 选项 · 示例 · 输出 · 退出码 · 另请参见）。命令组页面会列出并链接其下的子命令。
+每个命令和子命令都有独立页面。大多数页面采用相同结构（用法 · 说明 · 选项 · 示例 · 输出 · 退出码 · 另请参见）；带位置参数的命令另有「参数」一节，少数简单命令则省略「说明」。命令组页面列出其下的所有子命令及相应链接。
+
+## 哪些命令能在哪些网络上运行 {#which-commands-run-on-which-networks}
+
+wallet-cli 支持两个链家族——**TRON** 和 **EVM**，而 `--network` 选中的是某个家族里的某一个网络。命令分为三类：
+
+- **通用命令**——在两个家族上都是同一条命令，只是与家族相关的部分各按家族命名：`account balance` / `info` / `portfolio`、`block`、`tx send` / `broadcast` / `status` / `info` / `sign`、`token`（全部五条）、`contract call` / `send` / `deploy`、`chain node` / `prices`、`message sign`、`typed-data sign`。
+- **仅 TRON**——该命令实现的是 TRON 协议特性，EVM 上没有对应物：`account history` / `activate` / `set`、`chain params`、`contract info` / `clear-abi` / `create2` / `set-origin-energy-limit` / `set-user-resource-percent`、`tx approvals` / `multisig`，以及 `stake`、`vote`、`reward`、`proposal`、`witness`、`permission`、`asset`、`exchange`、`gasfree` 这几组里的每一条命令。在 EVM 网络上运行它们，会在任何节点调用之前就以 **`family_mismatch`** 失败。
+- **本地命令**——完全不涉及网络：`create`、`import`、`use`、`current`、`list`、`derive`、`rename`、`backup`、`delete`、`change-password`、`config`、`networks`、`contact`、`encoding`、`address`。其中一部分仍然接受 `--network`，但它只是一个**显示选择器**（打印哪个家族的地址，keystore 导出取哪把密钥）；无论如何都不会访问节点。
+
+单个参数也是按家族划分的。`--help` 会给它们打上 `(TRON only)` / `(EVM only)` 标记，把其中之一用在另一个家族上属于用法错误——`invalid_option`，退出码 `2`。
 
 ## 钱包与账户
 
@@ -167,13 +177,24 @@
 
 ```
 -o, --output <text|json>   result format (default: config.defaultOutput, built-in text)
---network <string>         canonical network id (chain commands; falls back to config.defaultNetwork)
+--network <string>         network id or alias, e.g. nile, sepolia, bsc, eip155:11155111
+                           (falls back to config.defaultNetwork)
 --account <string>         accountId, label, or address (wallet-bound commands; falls back to active)
---timeout <number>         per RPC/device call timeout, ms (default: config.timeoutMs, built-in 60000)
+--timeout <number>         per node, service, or device call timeout, ms (default: config.timeoutMs, built-in 60000)
 -v, --verbose              extra diagnostic output
 -h, --help / -V, --version
 ```
 
-广播类（✍️）命令还额外支持 `--wait` / `--wait-timeout <ms>`（时间上限默认取配置 `waitTimeoutMs`，内置 60000）、提前退出模式 `--dry-run` / `--sign-only` / `--build-only`，以及多签选项 `--permission-id <n>` / `--expiration <ms>`。
+schema 中启用了广播后轮询的命令支持 `--wait` / `--wait-timeout <ms>`（时间上限默认取配置 `waitTimeoutMs`，内置 60000）。提前退出模式同样因命令而异：构建交易的命令可能提供 `--dry-run` / `--sign-only` / `--build-only`，而像 `tx broadcast` 这样只负责提交的命令既不重新构建也不签名，因此没有 `--sign-only` / `--build-only`。
 
-三种提前退出模式互斥，且 `--expiration` 只有与 `--sign-only` 或 `--build-only` 同时使用时才被接受。违反其中任一条都属于用法错误，退出码为 `2`。具体错误码取决于检查发生的位置：在治理类以及 asset/exchange 的写操作中是 `invalid_value`，且错误信息给出的字段名是 `--input`，而不是你实际传入的那些选项——例如 `invalid --input: choose at most one of --dry-run, --sign-only, --build-only`。其他地方同样的冲突则报告 `invalid_option`。请按退出码分支，而不要按错误码字符串分支；参见 [machine-interface](../machine-interface.md#error-codes)。
+费用参数和多签参数是**按家族划分**的，因此它们不是全局选项：
+
+| 参数 | 家族 | 出现在哪里 |
+|---|---|---|
+| 权限组与过期时间——见下 | TRON | 会签名、或能输出未签名 hex 的 TRON 交易构建命令；不含 `tx broadcast` 和 GasFree |
+| `--fee-limit <sun>` | TRON | 会消耗能量的那些命令：`tx send`、`contract send` / `deploy` |
+| `--gas-limit <n>` / `--max-fee <gwei>` / `--priority-fee <gwei>` / `--nonce <n>` | EVM | `tx send`、`contract send` / `deploy` |
+
+上述 TRON 交易构建命令接受两个多签相关参数：用于签名的权限组（0=owner，1=witness，2-9=active）和交易过期时间。后者可在离线构建或签名时延长收集联署签名的窗口。跨家族命令会将这两个参数标记为 `(TRON only)`；在 EVM 上使用时会返回 `invalid_option`。EVM 交易只有一个签名，因此不需要这两个参数。
+
+同时提供三种提前退出模式的命令要求它们互斥；`--expiration` 也只能与 `--sign-only` 或 `--build-only` 一起使用。违反任一规则都属于用法错误，退出码为 `2`。具体错误码和字段名取决于校验位置：治理类写操作返回 `invalid_value`；模式互斥属于对象级校验，因此字段名显示为 `--input`——`invalid --input: choose at most one of --dry-run, --sign-only, --build-only`；`--expiration` 的校验直接作用于该字段，因此错误会明确指出它——`invalid --expiration: only valid with --sign-only or --build-only`。其他命令中的同类冲突返回 `invalid_option`。脚本应按退出码分支，不要依赖错误码字符串；参见 [machine-interface](../machine-interface.md#error-codes)。

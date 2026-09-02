@@ -44,7 +44,7 @@
 
 ### GetBlockByIdOrNum
 
-根据区块 ID 或区块高度获取区块。如果不传参数，则获取头部区块。
+根据区块 ID 或区块高度获取区块。如果不传参数，则获取最新区块。
 
 ### GetBlockByLatestNum
 
@@ -57,10 +57,10 @@
 ### GetBlockByLimitNext
 
 ```console
-> GetBlockByLimitNext startBlockId endBlockId
+> GetBlockByLimitNext start_block_number end_block_number
 ```
 
-获取区间 [startBlockId, endBlockId) 内的区块。
+获取区块高度区间 [start_block_number, end_block_number) 内的区块。两个参数都是区块**高度**，不是区块 id。
 
 ## 链参数与节点
 
@@ -82,7 +82,7 @@
 
 ### BroadcastTransaction
 
-广播交易，其中交易为 hex-string 格式。
+广播以十六进制字符串表示的交易。
 
 ## 本地工具
 

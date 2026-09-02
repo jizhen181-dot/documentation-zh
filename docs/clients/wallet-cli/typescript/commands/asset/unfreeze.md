@@ -22,6 +22,8 @@ wallet-cli asset unfreeze
 
 **该命令默认在提交时返回**（`stage: "submitted"`），而不是确认时——加 `--wait` 可阻塞直到已确认/失败。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
 
+Ledger 的 TRON 应用无法对 TRC10 发行类合约签名。Ledger 账户可以做试运行或构建未签名的 hex，但签名模式会在与设备交互之前就以 `ledger_unsupported` 失败。
+
 ## 选项
 
 本命令没有自己的选项。
@@ -30,7 +32,7 @@ wallet-cli asset unfreeze
 |---|---|
 | `--dry-run` | 只构建和估算，不签名/不广播；与 `--sign-only` / `--build-only` 互斥 |
 | `--sign-only` | 只签名不广播，输出已签名的 hex；与 `--dry-run` / `--build-only` 互斥；配合 `--expiration` 使用 |
-| `--build-only` | 只构建，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
+| `--build-only` | 构建并估算，输出**未签名**的 hex；与 `--dry-run` / `--sign-only` 互斥；配合 `--expiration` 使用 |
 | `--expiration <ms>` | 交易过期时间（毫秒），最大 `86400000`（24 小时）；仅可与 `--sign-only` 或 `--build-only` 同用；省略时使用节点默认值（约 60 秒） |
 | `--permission-id <n>` | 用于签名的权限组（0=owner，1=witness，2-9=active）；默认 `0` |
 | `--wait` / `--wait-timeout <ms>` | 广播后轮询直到已确认/失败（上限默认取配置 `waitTimeoutMs`，内置 60000） |
@@ -43,27 +45,27 @@ wallet-cli asset unfreeze
 示例中的 `$PW` 是你的 master password（来自环境变量、密码管理器等），通过 `--password-stdin` 从 stdin 传入。
 
 ```bash
-echo "$PW" | wallet-cli asset unfreeze --network tron:nile --wait --password-stdin
+echo "$PW" | wallet-cli asset unfreeze --network tron:3448148188 --wait --password-stdin
 ```
 
 ```console
 ✅ Frozen supply released
   Asset         MyToken  (id 1000123)
-  Issuer        TQkXm4vN...5Zt7Uw (main)
+  Issuer        TQkXm4vN...5Zt7Uw
   Released      100,000,000 MyToken
   Still frozen  50,000,000 MyToken
   TxID          6a5...
-  Block         57,883,560
-  Fee           0 TRX  (288 bandwidth)
+  Block         #57,883,560
+  Fee           0 TRX
   Status        success
 ```
 
 ```bash
-echo "$PW" | wallet-cli asset unfreeze --network tron:nile --wait --password-stdin -o json
+echo "$PW" | wallet-cli asset unfreeze --network tron:3448148188 --wait --password-stdin -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"asset.unfreeze","data":{"kind":"asset-unfreeze","stage":"confirmed","txId":"6a5...","confirmed":true,"blockNumber":57883560,"failed":false,"assetId":"1000123","name":"MyToken","issuerAddress":"TQkXm4vN...","releasedAmount":100000000000000,"stillFrozenAmount":50000000000000,"feeSun":0,"resource":{"netUsage":288,"netFeeSun":0,"energyUsage":0,"energyFeeSun":0}},"meta":{"durationMs":6410,"warnings":[]},"chain":{"family":"tron","network":"tron:nile","chainId":"nile"}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"asset.unfreeze","data":{"kind":"asset-unfreeze","stage":"confirmed","txId":"6a5...","confirmed":true,"blockNumber":57883560,"feeSun":0,"netUsed":288,"netFeeSun":0,"failed":false,"assetId":"1000123","name":"MyToken","issuerAddress":"TQkXm4vN...","releasedAmount":"100000000000000","stillFrozenAmount":"50000000000000","precision":6},"meta":{"durationMs":6410,"warnings":[]},"chain":{"family":"tron","network":"tron:3448148188","chainId":"3448148188"}}
 ```
 
 ## 输出
@@ -72,14 +74,14 @@ echo "$PW" | wallet-cli asset unfreeze --network tron:nile --wait --password-std
 
 | 阶段 | 字段 |
 |---|---|
-| 默认（提交） | `kind: "asset-unfreeze"`、`stage: "submitted"`、`txId`、`assetId`、`name`、`issuerAddress` |
-| `--wait`（已确认） | 以上内容，外加 `stage: "confirmed"`、`confirmed`（boolean）、`blockNumber`、`feeSun`、`resource`、`failed`、`releasedAmount`、`stillFrozenAmount` |
+| 默认（提交） | `kind: "asset-unfreeze"`、`stage: "submitted"`、`txId`、`assetId`、`name`、`issuerAddress`、`precision`，以及 `releasedAmount` / `stillFrozenAmount`——这里同样存在，但表示本命令*打算*释放的金额 |
+| `--wait`（已确认） | 以上内容，外加 `stage: "confirmed"`、`confirmed`（boolean）、`blockNumber`、返回时的扁平结算字段（`feeSun`、`energyUsed`、`netUsed`、`energyFeeSun`、`netFeeSun`）、`failed`；此时的 `releasedAmount` 取自回执 |
 
-`releasedAmount` 和 `stillFrozenAmount` 是原始金额（最小单位），反映已确认交易实际完成的结果。
+`releasedAmount` 和 `stillFrozenAmount` 是原始十进制字符串（最小单位）；结果中还带有 `precision` 供换算。两者始终存在——确认之前它们是本命令根据该资产的冻结批次自行算出的结果，只有确认后的 `releasedAmount` 才是回执里的数字。
 
 ## 退出码
 
-`0` 已提交（早退模式下为已构建/已签名） · `1` 执行失败（`not_an_issuer`——该账户没有发行过 TRC10；`no_frozen_supply`；`not_yet_unfreezable`——还没有任何批次到期；`watch_only_no_signer`；`auth_failed`） · `2` 用法错误。
+`0` 已提交（早退模式下为已构建/已签名） · `1` 执行失败（`not_an_issuer`——该账户没有发行过 TRC10；`no_frozen_supply`；`not_yet_unfreezable`——还没有任何批次到期；`watch_only_no_signer`；`ledger_unsupported`；`auth_failed`） · `2` 用法错误。
 
 ## 另请参见
 

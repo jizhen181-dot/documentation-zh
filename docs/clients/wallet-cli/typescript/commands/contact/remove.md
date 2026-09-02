@@ -1,6 +1,6 @@
 # wallet-cli contact remove
 
-从联系人簿中删除一个收款方。
+删除一个联系人。
 
 ## 用法
 
@@ -45,7 +45,7 @@ wallet-cli contact remove bob -o json
 
 ## 退出码
 
-`0` 成功 · `1` 执行失败（`not_found`——不存在该联系人、`encoding_error`、`insecure_permissions`） · `2` 用法错误。
+`0` 成功 · `1` 执行失败（`encoding_error`、`insecure_permissions`） · `2` 用法错误（`contact_not_found`——不存在该名称的联系人；`invalid_value`）。
 
 ## 另请参见
 

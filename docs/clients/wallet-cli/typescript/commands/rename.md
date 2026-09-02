@@ -41,7 +41,7 @@ wallet-cli rename main-1 --label hot-hd -o json
 ```
 
 ```json
-{"schema":"wallet-cli.result.v1","success":true,"command":"rename","data":{"previousLabel":"main-1","accountId":"wlt_0y2z0gvr.1","label":"hot-hd","type":"seed","index":1,"active":true,"addresses":{"tron":"TRzaAZWRvPCcmqNETTWvmMLDi6cKwM3gbR"},"seedId":"wlt_0y2z0gvr"},"meta":{"durationMs":14,"warnings":[]}}
+{"schema":"wallet-cli.result.v1","success":true,"command":"rename","data":{"previousLabel":"main-1","accountId":"wlt_0y2z0gvr.1","label":"hot-hd","type":"seed","index":1,"active":true,"addresses":{"tron":"TRzaAZWRvPCcmqNETTWvmMLDi6cKwM3gbR","evm":"0x94f2e5cbb4BcA39A3F6c252217a0F30A0D23660b"},"seedId":"wlt_0y2z0gvr","derivationPath":{"tron":"m/44'/195'/1'/0/0","evm":"m/44'/60'/0'/0/1"}},"meta":{"durationMs":14,"warnings":[]}}
 ```
 
 ## 输出
@@ -56,9 +56,10 @@ wallet-cli rename main-1 --label hot-hd -o json
 | `type` | string | `seed` / `privateKey` / `watch` / `ledger` |
 | `index` | number \| null | HD 派生索引；非 HD 账户为 `null` |
 | `active` | boolean | 是否为当前账户 |
-| `addresses.tron` | string | Base58 TRON 地址 |
+| `addresses` | object | 该账户能产生的每个家族各一项：`tron`（base58）和/或 `evm`（`0x`，EIP-55 校验和格式） |
+| `derivationPath` | object \| null | 派生类账户按家族给出的 BIP44 路径；`watch` / `privateKey` 从未派生过，因此为 `null` |
 | `seedId` | string | 所属种子钱包 id（仅 `seed` 账户） |
-| `family` | string | 链系，例如 `tron`（仅 `watch` 账户） |
+| `family` | string | 该账户绑定的链家族——仅单家族账户（`watch`、`ledger`）有此字段 |
 
 ## 退出码
 

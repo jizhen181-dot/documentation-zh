@@ -13,6 +13,8 @@
 
 状态：`voting`（仍在窗口内） · `approved`（达到阈值、已生效、终态） · `disapproved`（到期时未达阈值、终态） · `canceled`（创建者在到期前撤回、终态）。
 
+**仅限 TRON。** 链上参数治理是 TRON 的协议特性；本组每一条子命令在 EVM 网络上都会以 `family_mismatch` 失败。
+
 ## 用法
 
 ```

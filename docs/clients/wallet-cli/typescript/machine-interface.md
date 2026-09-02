@@ -6,12 +6,42 @@
 ## 调用约定 {#calling-convention}
 
 ```bash
-wallet-cli <command> -o json [--network <id>] [--timeout <ms>] [--account <id|label>]
+wallet-cli <command> -o json [--network <id|alias>] [--timeout <ms>] [--account <id|label>]
 ```
 
-- 始终传 `-o json`。text 输出是给人看的，不带任何稳定性承诺。
+- 始终传 `-o json`。text 输出仅供人工阅读，不提供任何稳定性承诺。
 - 在 JSON 模式下，stdout **只输出一个完整的 JSON 响应对象**，不会混入其他内容；诊断信息写入 stderr。
 - 每次 RPC / 设备调用都受 `--timeout` 限制（毫秒，默认取 `config.timeoutMs`，内置默认值 60000）。
+- `--network` 接受规范的 **CAIP-2** id（`tron:3448148188`、`eip155:11155111`），或一个简短别名（`nile`、`sepolia`、`bsc`）。namespace 不等于链家族：`eip155` 指向的是 `evm` 家族。别名只在选择网络时解析一次，下游任何环节都看不到它，而响应中的 `chain.network` 始终报告规范 id。脚本中请优先使用规范 id——别名只是一条本地配置，可以被重新指向。
+- 本 CLI 在采用 CAIP-2 之前使用的 **TRON** id（`tron:mainnet`、`tron:nile`、`tron:shasta`）会永久保留为别名，因此原有调用方式仍然有效。但输出统一使用 CAIP-2 id：`chain.network`、`networks` 列表中的 `id` 和 `config` 的键均如此。依赖字符串匹配或使用 `tron:nile` 作为 map 键的调用方必须更新。别名只在选择网络时解析，不会出现在结果中。
+
+### 能力发现
+
+```bash
+wallet-cli --json-schema                # 全部命令、它们的参数，以及错误码索引
+wallet-cli --json-schema tron           # 限定到某一个链家族
+wallet-cli <command> --json-schema      # 单条命令
+```
+
+一次调用即可返回完整的接口描述：`tool`、`version`、`globalFlags`、`errorCodes` 和 `commands[]`。每个命令条目都包含 `id`、`path`、`usage`、`requires`（network / auth / wallet）、`capability`、`examples`，以及描述输入的 JSON Schema；链上命令还会声明 `families`。这是智能体了解本 CLI 的推荐方式，请勿抓取 `--help` 的文本输出。
+
+### 链家族
+
+一个网络属于某一个**链家族**——`tron` 或 `evm`，而正是它决定了哪些命令、哪些参数适用：
+
+- 命令会声明它服务于哪些家族（目录中的 `families`）。在另一个家族的网络上调用它，会在任何节点调用之前就以 **`family_mismatch`** 失败，退出码 `2`。
+- 参数也可能只属于某一个家族（`--asset-id` 和 `--permission-id` 是 TRON 的，`--gas-limit` 和 `--nonce` 是 EVM 的）。把其中之一用在另一个家族上是 **`invalid_option`**，退出码 `2`。`--help` 会给它们打上 `(TRON only)` / `(EVM only)` 标记。
+- 只要**账户**持有密钥，它就不绑定家族——seed 账户或私钥账户同时拥有 TRON 和 EVM 两个地址。仅观察账户和 Ledger 账户只有一个地址，因此也只属于一个家族；在不匹配的网络上选中它，同样是 `family_mismatch`。
+
+命令家族和参数家族的检查是静态的，可以直接从目录中判定。而账户家族的兼容性还取决于所选的钱包账户：有密钥的账户两个家族都能服务，仅观察账户和 Ledger 账户则绑定在一个家族上。
+
+### 启动时的钱包数据升级 {#startup-wallet-data-upgrades}
+
+每一次调用——包括不带任何参数、`--help`、`--version` 和 `--json-schema`——都会在执行其他操作前检查持久化的钱包 schema。如果 schema 已过时，启动流程会先完成升级，并将过程写入 stderr。升级成功时返回退出码 `0` 和一个成功响应，其 `command` 为 `migration`，data 中包含 `originalCommandExecuted: false`；触发升级的原命令不会执行。请查看升级结果后重新执行原命令。这样可避免脚本命令或交易提交命令在发生意外的持久化状态变更后继续执行。
+
+在交互式终端里，每个过时的钱包在改动文件之前都会先征求同意。用户选择 `Upgrade now` 之后，seed / 私钥类的迁移会要求输入 master password，而 Ledger / 仅观察类的迁移不需要。非交互式的 Ledger / 仅观察迁移仍然自动进行；而需要密码的迁移必须提供 `--password-stdin`，否则返回 `migration_required`，退出码 `2`——因为需要改变的是这次调用本身，所以它属于用法错误。
+
+交互式用户也可以选择 `Exit without upgrading`。这是一次成功的取消，而不是失败：它返回退出码 `0`，带 `command: "migration"`、`upgraded: false`、`cancelled: true` 和 `originalCommandExecuted: false`。不会写入任何钱包文件或备份。`migration_required` 只保留给迁移确实无法进行的情形，例如非交互式调用且没有任何密码来源。
 
 ## 退出码 {#exit-codes}
 
@@ -36,7 +66,7 @@ Schema id：`wallet-cli.result.v1`。
   "command": "account.balance",
   "data": { "address": "TMSgJxtPw29AFEHMXsjGo4kWV7UwbCToHJ", "balance": "1976489000", "decimals": 6, "symbol": "TRX" },
   "meta": { "durationMs": 1114, "warnings": [] },
-  "chain": { "family": "tron", "network": "tron:nile", "chainId": "nile" }
+  "chain": { "family": "tron", "network": "tron:3448148188", "chainId": "3448148188" }
 }
 ```
 
@@ -49,7 +79,7 @@ Schema id：`wallet-cli.result.v1`。
   "command": "tx.info",
   "error": { "code": "rpc_error", "message": "TRON getTransaction failed: Transaction not found" },
   "meta": { "durationMs": 1033, "warnings": [] },
-  "chain": { "family": "tron", "network": "tron:nile", "chainId": "nile" }
+  "chain": { "family": "tron", "network": "tron:3448148188", "chainId": "3448148188" }
 }
 ```
 
@@ -64,10 +94,12 @@ Schema id：`wallet-cli.result.v1`。
 | `error.details`   | object | 可选 | 可用时提供的结构化附加信息 |
 | `meta.durationMs` | number | 始终 | 实际耗时（毫秒） |
 | `meta.warnings`   | `(string \| {code, message})[]` | 始终 | 非致命提示；**元素类型并不统一**——见下文 |
-| `meta.pagination` | object | 仅分页命令 | `offset` / `limit` / `total`；在支持 `--limit` / `--offset` 的地方出现——见[分页](#pagination) |
-| `chain`           | object | 仅链上命令 | `family` / `network` / `chainId`；与链无关的命令（`list`、`config` 等）不带它 |
+| `meta.pagination` | object | 仅返回窗口的命令 | `offset` / `limit` / `total`；当命令返回一个分页窗口时出现——见[分页](#pagination) |
+| `chain`           | object | 选定了网络时 | `family` / `network` / `chainId`。每条链上命令都有；本地命令若其策略会解析出一个网络，也会有。`network: "none"` 的命令不带它；它的存在**并不**意味着访问过节点 |
 
-编码规则：`bigint` 值序列化为十进制**字符串**（例如 `"balance": "1976489000"`），二进制数据序列化为 hex。请把所有链上金额都当作字符串处理。
+目前会感知网络的本地命令是 `backup`、`current` 和 `list`。它们把所选网络（或默认网络）当作家族/显示选择器使用，并不访问节点。
+
+编码规则：`bigint` 值序列化为十进制**字符串**（例如 `"balance": "1976489000"`），二进制数据序列化为 hex。由 `bigint` 或协议 int64 表示的金额是字符串；而 `feeSun`、`multiSignFeeSun`、`energyUsed`、`netUsed` 这类有界的计数和费用可能是 JSON 数字。请以各命令的字段表为准，不要把所有金额一概强转成同一种类型。
 
 ### 读取 `meta.warnings` {#reading-metawarnings}
 
@@ -76,7 +108,7 @@ Schema id：`wallet-cli.result.v1`。
 普通字符串。展示前请先统一处理两种形式，不要假设所有元素类型相同：
 
 ```bash
-# 给人看的文本——两种形式都适用
+# 供人工阅读的文本——两种形式都适用
 jq -r '.meta.warnings[] | if type == "string" then . else .message end'
 
 # 针对特定情况分支——仅对象形式适用
@@ -87,7 +119,7 @@ jq -e '.meta.warnings[] | select(type == "object" and .code == "owner_lockout")'
 
 ### 分页 {#pagination}
 
-接受 `--limit` / `--offset` 的命令会在 `meta.pagination` 中报告当前分页信息，而不是放在 `data` 中：
+返回 offset/limit 窗口的命令会在 `meta.pagination` 中报告这个窗口，而不是放在 `data` 里。目前这类命令是 `asset list`、`exchange list`、`proposal list` 和 `backup --records`；某些命令只是把 `--limit` 当作结果条数上限，因此并不会给出分页元数据。
 
 | 键 | 类型 | 含义 |
 |---|---|---|
@@ -117,31 +149,45 @@ text 模式会为同一页数据添加标题（`Assets (limit 50, offset 0)`、`
 ## 错误码 {#error-codes}
 
 **退出码是稳定接口**：`2` 表示命令参数或调用方式有误（直接重试仍会失败），`1` 表示执行过程中发生
-网络、设备、链或钱包错误。`error.code` 用于进一步区分具体原因；程序应先按退出码分类，再按需要处理
-`error.code`。错误码并非封闭枚举，后续可能新增；少数字符串（如 `invalid_value`、`aborted`）也可能
-出现在两种退出码下，具体取决于错误发生阶段。调用方应兼容未知错误码，并回退到对应的退出码类别。
+网络、设备、链或钱包错误。`error.code` 用于进一步区分具体原因；程序应先按退出码分类，再按需要处理 `error.code`。
+
+**持续维护的错误码索引是公开的**，每个 code 一行，位于能力发现目录的 `errorCodes` 下：
+
+```bash
+wallet-cli --json-schema | jq '.errorCodes'
+```
+
+这份索引是本版本暴露出来的机器可读目录。请把它当作能力发现的辅助手段，而不是一个封闭枚举：有少数代码路径会在运行时动态选择错误码字符串，因此实际响应中仍可能出现 `errorCodes` 里没有的 code。下面的表格是高频子集，便于阅读。v1 内仍可能新增 code；少数字符串（如 `invalid_value`、`aborted`、`not_found`、`token_metadata_unavailable`）也可能出现在两种退出码下，具体取决于错误发生阶段——所以请始终兼容未知错误码，并回退到对应的退出码类别。
 
 退出码 **2**（用法——修正调用方式）下的常见错误码：
 
 | 错误码 | 含义 |
 |---|---|
-| `usage_error` | 参数未知 / 缺失 / 冲突（由解析器抛出） |
+| `usage_error` | 由参数解析器本身抛出——yargs 的用法失败，或位置参数过多。更具体的问题各有自己的 code：未知参数是 `invalid_option`，缺少必填参数是 `missing_option`，取值校验或跨字段规则失败是 `invalid_value` |
+| `family_mismatch` | 该命令、该账户、该收款方或该原始交易不属于所选网络所在的链家族 |
 | `missing_option` | 未提供某个必填参数 |
-| `invalid_option` | 某个参数被用在了非法组合中 |
+| `invalid_option` | 某个参数被用在了非法组合中，或者它只属于另一个链家族 |
+| `invalid_permission` | 权限文档或所选的权限组对该操作而言不合法 |
 | `invalid_value` | 某个参数取值未通过校验（例如 `config defaultOutput xml`） |
 | `invalid_amount` | 金额格式错误或超出范围 |
-| `invalid_secret` | 提供的助记词 / 私钥格式错误 |
 | `weak_password` | master password 未达策略要求（≥8 个字符；大写 + 小写 + 数字 + 特殊字符） |
-| `tty_required` | 需要交互式提示，但没有挂载 TTY——请传对应的 `*-stdin` 标志 |
-| `missing_network` / `unsupported_network` | 缺少 `--network`，或它不是已知的规范 id |
+| `tty_required` | 需要交互式提示，但没有挂载 TTY——请在终端中运行，或在该命令提供 stdin 标志时改用它 |
+| `missing_network` / `unsupported_network` | 调用方显式要求注册表解析一个空的网络 id，或者给出的规范 id / 别名未知。普通链上命令在省略 `--network` 时使用 `config.defaultNetwork`，其内置值为 `tron:728126428` |
+| `unsupported_network_capability` | 所选网络不提供该命令所需的能力 |
+| `limit_exceeded` | 某个有界输入（文件大小、列表长度、分页大小）超出了上限 |
 | `unknown_command` | 没有这条命令 |
 | `output_exists` | 目标文件已存在且绝不会被覆盖（`backup --out`、`address generate --out`）。这是确定性的——用同一路径重试永远会失败 |
-| `file_not_found` | 某个参数指定的输入文件不存在（`contract create2 --code-file`） |
+| `file_not_found` | 某个参数指定的输入文件不存在（`contract deploy --artifact` / `--code-file`、`contract create2 --code-file`） |
 | `keystore_not_found` | `import keystore`：给定路径上没有文件 |
+| `migration_required` | 持久化的钱包数据需要升级，但本次调用因无法获得 master password 而不能完成升级——请在终端中重新运行，或用 `--password-stdin` 管道传入。参见[启动时的钱包数据升级](#startup-wallet-data-upgrades) |
 | `invalid_keystore` | `import keystore`：不是合法的 Web3 V3 keystore——JSON 有误、`version` ≠ 3、使用了不支持的 cipher/KDF，或解密结果不是 32 字节私钥 |
 | `invalid_config` | `config.yaml` 无法读取或不是合法的 YAML——请修复或删除该文件。解析器的具体细节被隐去：它会引用出错的那一行，而那行可能带有凭据 |
 | `insecure_config` | `config.yaml` 保存了服务凭据，但它是符号链接或对同组/所有人可读——请对它执行 `chmod 600`（仅 POSIX；Windows 上不强制） |
-| `token_not_in_book` / `token_is_official` / `token_metadata_unavailable` | token 地址簿相关的状况 |
+| `contact_not_found` / `already_exists` | 不存在该名称的联系人，或该联系人名称/地址已被占用 |
+| `token_not_in_book` / `token_is_official` / `token_already_listed` | token 地址簿相关的状况 |
+| `unsupported_token` | 所选服务方或该命令不支持这个 token |
+| `insufficient_voting_power` | 请求的票数超出该账户可用的投票权 |
+| `gasfree_credentials_missing` / `tronlink_credentials_missing` | 未配置所需的服务凭据（用 `config` 设置） |
 | `unknown_parameter` | 不存在该名称或 id 的链参数（`proposal create --set`） |
 | `invalid_asset_name` | TRC10 名称或缩写不在 1–32 个可见 ASCII 字符范围内 |
 
@@ -149,40 +195,44 @@ text 模式会为同一页数据添加标题（`Assets (limit 50, offset 0)`、`
 
 | 错误码 | 含义 |
 |---|---|
-| `rpc_error` | TRON 节点拒绝了请求或请求执行失败 |
-| `invalid_node_response` | 节点的应答与请求或协议相矛盾：TRC10/exchange 记录的 id 并非所请求的那个、`precision` 超出 0..6，或汇率对不是正的 int32。这些值决定了签名金额，因此命令会直接停止而不是照单执行。列表读取则会丢弃有问题的记录并保留该页 |
+| `rpc_error` | 节点拒绝了请求或请求执行失败——可能是一次 TRON API 调用，也可能是 `eth_estimateGas` 之类的 JSON-RPC 方法 |
+| `invalid_node_response` | 节点的应答与请求或协议相矛盾：TRC10/exchange 记录的 id 并非请求的值、`precision` 超出 0..6，或汇率对不是正的 int32。这些值会影响签名金额，因此命令会直接停止，不会继续使用异常数据。列表读取则会丢弃有问题的记录并保留该页 |
 | `timeout` | 等待网络或设备时被中止（超过 `--timeout`） |
-| `auth_required` | 需要 master password 但未提供 |
+| `auth_required` | 所需的凭据不可用——软件账户的 master password，或者 Ledger app / 设备未就绪 |
 | `auth_failed` | master password 错误（解密失败） |
 | `signing_rejected` / `transaction_rejected` | 签名或广播被拒绝（设备或链） |
 | `watch_only_no_signer` | 该账户是仅观察账户，无法签名 |
+| `invalid_mnemonic` / `invalid_private_key` | 存储层校验拒绝了格式错误的助记词或私钥；交互式导入通常会在提示处当场发现并要求重输 |
+| `token_metadata_unavailable` | 无法从所选网络读取必需的 token 元数据。该错误可能对应两种退出码：大多数场景返回退出码 `1`；但在 TRON 上，如果 `tx send` 遇到合约不返回 `decimals()` 且地址簿中也没有对应条目，则返回退出码 **2**——此时必须修改调用参数或配置 |
 | `wrong_device_seed` | 连接的 Ledger 与已注册的账户不匹配 |
 | `tx_integrity` / `invalid_transaction` | 预签名交易未通过完整性 / 合法性检查 |
 | `insufficient_balance` / `insufficient_token_balance` | TRX / token 不足以覆盖金额加手续费 |
-| `provider_error` | 外部服务（GasFree、TronLink 多签）返回错误或做了限流 |
-| `gasfree_credentials_missing` / `tronlink_credentials_missing` | 未配置所需的服务凭据（用 `config` 设置） |
-| `tx_expired` | 签名收齐之前交易就已过期 |
-| `history_not_supported` | 该端点不支持 TronGrid 历史查询 |
-| `not_found` | 所寻址的对象不存在——未激活的账户、联系人、链参数、GasFree 或 TronLink 资源。有专属分组的查询使用下面更具体的错误码 |
+| `provider_error` | 节点或外部服务返回了 CLI 无法安全使用的数据——例如格式错误、自相矛盾或超出取值范围的响应（TRON 权限数据、链参数、本地 TronWeb 构建未暴露的 protobuf 编解码器，以及 GasFree / TronLink 的载荷）、请求失败，或者 GasFree / TronLink 返回错误状态码。TronLink 的**所有**非 404 状态码都归到这里，包括 429 |
+| `provider_rate_limited` | **仅 GasFree**——服务返回了 HTTP 429；若它发送了 `Retry-After` 头，`error.details.retryAfter` 会带上它。TronLink 的 429 归为 `provider_error` |
+| `tx_expired` | 签名收齐之前交易就已过期（TRON） |
+| `chain_id_mismatch` | 该 EVM 交易是为另一条链构建的，与所选网络不符 |
+| `nonce_too_low` | 该 EVM 交易的 nonce 已经被一笔已入块的交易用掉了 |
+| `history_not_supported` | 该端点不支持 TronGrid 历史查询（`account history`，TRON） |
+| `not_found` | 所寻址的对象不存在——例如未激活的账户、交易、区块，或 GasFree / TronLink 资源。有些命令级别的查询会把同一个字符串作为用法错误抛出；请先按退出码分支 |
 | `proposal_not_found` / `contract_not_found` / `asset_not_found` / `exchange_not_found` | 链上没有该提案 id、合约地址、TRC10 引用或交易对 id 对应的对象 |
 | `ambiguous_asset_name` | 某个 TRC10 名称匹配到多个 token；`error.details` 中带有候选项——见 [`error.details.matches`](#errordetailsmatches) |
-| `ledger_unsupported` | Ledger TRON app 无法为该合约类型签名——在触碰设备之前就会被拒绝（`asset` 写操作、`witness` 写操作） |
+| `ledger_unsupported` | 所选的 Ledger app 无法为该交易类型签名——请求会在访问设备前被拒绝（TRON 的账户激活、账户 id、asset 写操作、合约部署/治理、witness 写操作，以及 cancel-unfreeze） |
 | `not_a_witness` / `already_witness` / `not_proposal_owner` | 治理身份不满足该操作的规则 |
 | `already_approved` / `not_approved` / `proposal_expired` / `already_canceled` | 提案投票的状态条件 |
-| `account_not_active` / `chain_parameter_unavailable` | `witness create`：账户未在链上激活，或节点没有返回 `getAccountUpgradeCost` |
-| `not_contract_deployer` | 该账户并非那个合约的部署者 |
+| `account_not_active` / `account_already_active` / `name_already_set` / `id_already_set` / `chain_parameter_unavailable` | 账户激活 / 名称 / id 相关的状况，或者 `witness create` 无法读取 `getAccountUpgradeCost` |
+| `not_contract_deployer` | 该账户不是目标合约的部署者 |
 | `already_issued_asset` / `not_an_issuer` | 该账户已经发行过 TRC10，或者从未发行过 |
 | `not_in_ico_window` / `self_participation` | TRC10 ICO 参与条件 |
 | `no_frozen_supply` / `not_yet_unfreezable` | 没有冻结的部分，或还没有到期的部分（`asset unfreeze`） |
 | `not_exchange_creator` / `token_not_in_exchange` / `exchange_closed` / `same_token` | 交易对的访问权限与状态条件 |
 | `insufficient_reserve` | `exchange withdraw`：超过了交易对那一侧所持有的量 |
-| `precision_loss` / `slippage_exceeded` / `exchange_trading_disabled` | 从一份很窄的白名单中命名的节点拒绝原因——储备比例无法整洁换算的金额、低于下限的回报，或者该网络根本不接受 Bancor 交易 |
+| `precision_loss` / `slippage_exceeded` / `exchange_trading_disabled` | 根据有限白名单识别出的节点拒绝原因——金额无法按储备比例精确换算、回报低于下限，或该网络不接受 Bancor 交易 |
 | `not_exportable` | 该账户不持有可导出的密钥材料（仅观察或 Ledger）——`backup` |
 | `account_exists` / `wrong_keystore_password` | `import keystore`：该地址已在钱包中，或文件自身的密码不对（区别于 `auth_failed`，后者指的是 master password）。`mac` 缺失或不是 hex 的文件属于 `invalid_keystore`，而不是密码错误——hex 不区分大小写 |
 | `internal_error` | 预期之外的内部失败；消息刻意保持通用 |
 
 预期之外的异常会先经过**脱敏处理**，再以 `internal_error` 和通用消息返回，避免第三方库回显的敏感信息
-进入响应。以上列表仅列出当前具有代表性的错误，v1 版本中仍可能新增错误码。
+进入响应。上面两张表只是便于阅读的辅助；`--json-schema` 的 `errorCodes` 才是持续维护的能力发现索引——它并不是一份保证解析器已穷举全部错误码的清单。
 
 ### `error.details.matches` {#errordetailsmatches}
 
@@ -201,17 +251,18 @@ stderr 的 `error [...]` 行下方以表格显示候选项。`matches` 中的数
 
 ## 敏感信息处理 {#secret-handling}
 
-CLI 不从 argv 或专用环境变量读取密码、助记词和私钥等敏感信息，因为这些位置可能通过 shell 历史、
-进程信息或 CI 日志造成泄露。敏感信息只能通过以下两种方式传入 CLI：
+wallet-cli 绝不从命令行参数或专用的敏感信息环境变量读取密码、助记词和私钥。命令行参数和导出的环境变量会泄漏进 shell 历史、进程列表和 CI 日志。传递敏感信息请使用下面这些 CLI 通道：
 
-1. **stdin 标志**——`--password-stdin`、`--tx-stdin`、`--message-stdin`。**每次运行只能有一个 `*-stdin` 标志消费 stdin。**（助记词和私钥没有 stdin 路径——`import mnemonic` / `import private-key` / `change-password` 只能交互执行，使用隐藏的 TTY 输入。）
-2. **交互式 TTY 提示**——在挂载了终端的情况下运行时。
+1. **stdin 标志**——`--password-stdin` 用于 master password；`--tx-stdin` / `--message-stdin` 用于较大的载荷。**每次运行只能有一个 `*-stdin` 标志消费 stdin。**（助记词和私钥没有 stdin 路径——`import mnemonic` / `import private-key` / `change-password` 只能交互执行，使用隐藏的 TTY 输入。）
+2. **交互式 TTY 提示**——仅用于明确声明为交互式的命令：`create`、各种 `import`、`backup`、`change-password`，以及 `delete` 的确认。其他命令无论是否挂载终端，行为都相同：`tx send`、`contract *`、`stake *`、`message sign` 等命令不会主动提示；缺少 master password 时一律返回 `auth_required`（退出码 `1`）。
+
+示例中的 shell 变量只是 shell 一侧为管道准备的数据来源；wallet-cli 并不会去读它们。请让它们保持在进程内、生命周期尽量短，也不要长期 export。
 
 ```bash
 # 非交互式解锁
 printf '%s' "$MASTER_PASSWORD_FROM_YOUR_VAULT" | wallet-cli tx send \
   --to TSx72ViULFepRGCS4PM5dP4FqD1d8qggCc --amount 1 \
-  --network tron:nile --password-stdin -o json
+  --network tron:3448148188 --password-stdin -o json
 ```
 
 ## 脚本安全：绝不要把"已提交"当作"已确认" {#script-safety-never-mistake-submitted-for-confirmed}
@@ -234,55 +285,56 @@ printf '%s' "$MASTER_PASSWORD_FROM_YOUR_VAULT" | wallet-cli tx send \
 
    | `data.state` | 含义 | 能否停止轮询？ |
    |---|---|---|
-   | `confirmed` | 已入块并取得执行回执（带有 `blockNumber`） | 可以——视为成功 |
+   | `confirmed` | 已入块，且已经能取到执行结果/回执（存在 `blockNumber`） | 可以 |
    | `failed` | 已入块，但链上执行失败 | 可以——视为失败 |
-   | `pending` | 已被看到但尚未入块 | 不能——继续轮询 |
-   | `not_found` | 被查询的节点不知道它 | 不能——超过截止时间后转为**状态未知**，而不是失败 |
+   | `pending` | 节点已经看到，但还没有执行结果/回执 | 不能——继续轮询 |
+   | `not_found` | 查询端点尚未找到该交易 | 不能——继续轮询/对账；不要据此判定失败 |
 
-   > **`confirmed` 表示已入块，不表示已固化。** 本命令与 `--wait` 读取的都是 FullNode 的
-   > *未确认*视图：`confirmed` 说明交易已在区块中、回执已确定，**不代表已固化、不可回滚**。
-   > 需要最终性时请另行查询 SolidityNode。
+   > `confirmed` 表示已入块并取得回执，不表示已最终确定。当这个区别重要时，请另行验证——TRON 上查询 SolidityNode 视图，EVM 上检查 finalized 区块。
 
-   > **`not_found` 超时不等于失败。** 它只说明*被查询的那个节点*不知道这笔交易，交易可能仍在
-   > 其他节点的内存池里。切勿据此重发——那是重复付款的来源。超过截止时间后应视为**状态未知**，
-   > 先通过 SolidityNode 或区块浏览器对账再决定。
+   > 轮询到截止时间仍停在 `pending` 或 `not_found`，结果依然是未知。不要把它记录为失败，也不要在没有外部对账的情况下自动重发。
 
    `data.confirmed` 和 `data.failed` 以布尔值提供，便于直接分支。
 
    **GasFree 转账是个例外。** `gasfree transfer` 提交给的是一个服务提供方，而不是直接提交给节点：提交回执中带的是 `traceId`（而不是 `txId`），进度遵循提供方的状态——`WAITING` → `INPROGRESS` → `CONFIRMING` → `SUCCEED` / `FAILED`。请用 `--wait` 或 [`gasfree trace <traceId>`](commands/gasfree/trace.md) 跟踪它，而不是 `tx status`；`txId` 只有在提供方把它送上链之后才会出现。
 
 ```bash
-# 先保存完整输出和退出码再解析：管道的退出码来自 jq，而错误响应中的 .data.txId 求值为 null，
-# jq 仍会以 0 退出，wallet-cli 的失败会被吞掉。
-out=$(wallet-cli tx send --to T... --amount 1 --network tron:nile --password-stdin -o json < pw.fifo)
-code=$?
-[ "$code" -eq 0 ] || { printf '%s\n' "$out" | jq -r '.error.code' >&2; exit "$code"; }
+#!/usr/bin/env bash
+set -euo pipefail
 
-txid=$(printf '%s' "$out" | jq -er '.data.txId') || exit 1
+deadline=$((SECONDS + 90))
+txid=$(
+  printf '%s' "$PW" |
+    wallet-cli tx send --to T... --amount 1 --network tron:3448148188 --password-stdin -o json |
+    jq -er '.data.txId'
+)
 
-deadline=$(( $(date +%s) + 120 ))       # 自行设定截止时间
-while :; do
-  # 查询本身同样要先保存输出和退出码：写成管道会取到 jq 的退出码，
-  # tx status 返回错误响应时 .data.state 求值为 null，会被当成"空状态"无限轮询。
-  status_out=$(wallet-cli tx status --txid "$txid" --network tron:nile -o json)
-  status_code=$?
-  if [ "$status_code" -ne 0 ]; then
-    printf '%s\n' "$status_out" | jq -r '.error.code' >&2
-    exit "$status_code"                      # 查询失败，不要静默继续
-  fi
-  state=$(printf '%s' "$status_out" | jq -er '.data.state') || exit 1
+while (( SECONDS < deadline )); do
+  state=$(
+    wallet-cli tx status --txid "$txid" --network tron:3448148188 -o json |
+      jq -er '.data.state'
+  )
 
   case "$state" in
-    confirmed) echo "已入块: $txid"; break ;;
-    failed)    echo "执行失败: $txid" >&2; exit 1 ;;   # 必须中止，不能继续循环
-    *)         # pending / not_found
-      if [ "$(date +%s)" -ge "$deadline" ]; then
-        # 超时不代表失败：状态未知，对账后再决定，切勿盲目重发
-        echo "状态未知，需人工对账: $txid" >&2; exit 2
-      fi
-      sleep 3 ;;
+    confirmed)
+      exit 0
+      ;;
+    failed)
+      echo "transaction failed: $txid" >&2
+      exit 1
+      ;;
+    pending|not_found)
+      sleep 3
+      ;;
+    *)
+      echo "unexpected transaction state: $state" >&2
+      exit 1
+      ;;
   esac
 done
+
+echo "transaction outcome unknown after deadline: $txid" >&2
+exit 1
 ```
 
 4. **批量操作**：每条命令对应一笔交易和一个退出码。默认的安全做法是遇到第一个失败就停止；如果选择继续，请逐项记录 txid，并在报告成功前用 `tx status` 逐一核对。
@@ -295,7 +347,9 @@ done
 - 0/1/2 的退出码映射；
 - JSON 模式下 stdout 只输出一个完整 JSON 对象的约定；
 - 已有的 `error.code` 取值保持其含义（可能新增 code）；
-- 规范命令 id 和网络 id（`tron:mainnet`、`tron:nile`、`tron:shasta`）。
+- 规范命令 id 和网络 id（`tron:728126428`、`tron:3448148188`、`tron:2494104990`、`eip155:1`、`eip155:56`、`eip155:11155111`、`eip155:97`）。
+
+网络**别名**属于配置，不属于接口约定：它们可以在本地被重新指向，因此脚本应当传规范 id。
 
 不在承诺范围内：text 模式输出、`error.message` 的措辞、字段顺序、`meta.durationMs` 的取值，以及任何在命令参考页上标记为尽力而为（best-effort）的字段（例如 `account portfolio` 中的 `priceUsd`）。
 

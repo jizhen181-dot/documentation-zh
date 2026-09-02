@@ -1,9 +1,9 @@
 # 质押与资源
 
 质押 TRX 可以获得能量和带宽资源，从而减少交易需要燃烧的 TRX。本文以 Nile 测试网为例说明 `stake`
-命令的完整流程。背景知识见[能量与带宽](../concepts/energy-bandwidth.md)。
+命令的完整流程。**仅限 TRON**：EVM 网络使用 gas 为交易计价，不提供对应的资源质押机制，因此本页命令在 EVM 网络上都会返回 `family_mismatch`。背景知识见[能量与带宽](../concepts/energy-bandwidth.md)。
 
-> **密码**：每条 `stake` 命令都要签名一笔交易，因此需要从 stdin 传入 master password（`--password-stdin`），且签名过程不会有任何提示。下面的示例省略了这部分，以便聚焦资源相关参数——请自行在前面加上 `printf '%s' "$PW" |`、在后面加上 `--password-stdin`，或者从密码管理器管道传入（见[快速上手](getting-started.md#3-send-your-first-transaction)）。第 1 步是只读查询，不需要密码。
+> **密码**：stake 写操作仅在需要签名的模式下使用 master password。为突出资源相关参数，以下示例省略了密码输入。使用软件账户签名时，请在命令前加上 `printf '%s' "$PW" |`，并在末尾添加 `--password-stdin`；也可以从密码管理器通过管道传入。`--dry-run`、`--build-only`、`stake info` 和 `stake delegated` 均无需密码。
 
 ## 1. 查看当前资源状态
 
@@ -11,7 +11,7 @@
 TRON Power；如需查看资源的 `used / limit` 明细，请使用 `account info`：
 
 ```bash
-wallet-cli account info --network tron:nile
+wallet-cli account info --network tron:3448148188
 ```
 
 ```console
@@ -32,15 +32,15 @@ Permissions  owner 1-of-1, 1 active group
 `--amount-sun` 使用原始 SUN（1 TRX = 1,000,000 SUN）。为能量质押 100 TRX：
 
 ```bash
-wallet-cli stake freeze --amount-sun 100000000 --resource energy --network tron:nile
+wallet-cli stake freeze --amount-sun 100000000 --resource energy --network tron:3448148188
 ```
 
-`--resource` 决定这笔质押产出哪种资源。它默认为 `bandwidth`；如果你打算发送 TRC20 token 或调用合约，就该质押 `energy`，因为这些操作消耗能量（如第 1 步所示）。TRX 依然是你的——它只是被锁定，而不是被花掉——质押还会带来 TRON Power（治理投票权）。和所有会改变状态的命令一样，`stake freeze` 支持 `--dry-run`、`--sign-only`、`--wait`，并且默认在提交时就返回。
+`--resource` 决定这笔质押产出哪种资源。它默认为 `bandwidth`；如果你打算发送 TRC20 token 或调用合约，就该质押 `energy`，因为这些操作消耗能量（如第 1 步所示）。TRX 依然是你的——它只是被锁定，而不是被花掉——质押还会带来 TRON Power（治理投票权）。和 stake 组其他写操作命令一样，`stake freeze` 支持 `--dry-run`、`--sign-only`、`--build-only`、`--wait`，并且默认在提交时就返回。
 
 再次运行 `account info` 验证结果，`Energy` 上限会反映新增的质押：
 
 ```bash
-wallet-cli account info --network tron:nile
+wallet-cli account info --network tron:3448148188
 ```
 
 ## 3. 把资源代理给另一个地址
@@ -48,13 +48,13 @@ wallet-cli account info --network tron:nile
 可以把质押产生的资源代理给其他地址。例如，将资源代理给热钱包后，热钱包无需自行质押 TRX 也能发起交易：
 
 ```bash
-wallet-cli stake delegate --amount-sun 50000000 --resource energy --receiver TGkbaCYB4kRBc3Q6wjqkACefUvRwf2KzkH --network tron:nile
+wallet-cli stake delegate --amount-sun 50000000 --resource energy --receiver TGkbaCYB4kRBc3Q6wjqkACefUvRwf2KzkH --network tron:3448148188
 ```
 
 默认情况下你可以随时收回一笔代理。加上 `--lock` 会在锁定期结束前禁止收回——用 `--lock-period <blocks>` 设置锁定期长度（每个区块约 3 秒）。代理之后，可以随时用 [`stake delegated`](../commands/stake/delegated.md) 查看当前的代理情况以及你最多可以代理多少。要在之后收回资源，用相反的命令 `stake undelegate`，并保持数量、接收方和资源类型一致：
 
 ```bash
-wallet-cli stake undelegate --amount-sun 50000000 --resource energy --receiver TGkbaCYB4kRBc3Q6wjqkACefUvRwf2KzkH --network tron:nile
+wallet-cli stake undelegate --amount-sun 50000000 --resource energy --receiver TGkbaCYB4kRBc3Q6wjqkACefUvRwf2KzkH --network tron:3448148188
 ```
 
 ## 4. 解质押、提取与取消
@@ -63,13 +63,13 @@ wallet-cli stake undelegate --amount-sun 50000000 --resource energy --receiver T
 
 ```bash
 # 第 1 步：申请解质押——资源立即失效，TRX 进入等待队列
-wallet-cli stake unfreeze --amount-sun 100000000 --resource energy --network tron:nile
+wallet-cli stake unfreeze --amount-sun 100000000 --resource energy --network tron:3448148188
 
 # 第 2 步（等待期结束后）：把已到期的解质押提取回余额
-wallet-cli stake withdraw --network tron:nile
+wallet-cli stake withdraw --network tron:3448148188
 
 # 可选：到期前取消全部待处理的解质押
-wallet-cli stake cancel-unfreeze --network tron:nile
+wallet-cli stake cancel-unfreeze --network tron:3448148188
 ```
 
 `cancel-unfreeze` 是取消这次退出，而不是继续推进它——它对所有待处理的解质押是全有或全无的，因此你无法只回滚其中一部分。运行之后，`withdraw` 也就没有任何可领取的内容了。`withdraw` 领取的是所有已过等待期的部分。

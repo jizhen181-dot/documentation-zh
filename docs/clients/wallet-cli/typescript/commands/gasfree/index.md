@@ -2,7 +2,9 @@
 
 通过 GasFree 服务进行免 gas 的 token 转账。
 
-`gasfree` 让你在不持有任何 TRX 的情况下转移 token：你用 EIP-712 结构化数据签名对转账签名，再由 GasFree 服务（[open.gasfree.io](https://open.gasfree.io)）代你上链。费用直接从所转的那种 token 里扣——每笔转账一笔服务费，首次转账另加一次性的激活费——所以**完全不需要 TRX**。
+`gasfree` 可以在账户没有 TRX 时转移 token：用户签署 TIP-712 结构化数据（TRON 版的 EIP-712），再由 GasFree 服务（[open.gasfree.io](https://open.gasfree.io)）代为提交上链。费用直接从转出的 token 中扣除，包括每笔交易的服务费，以及首次交易的一次性激活费，因此**完全不需要 TRX**。
+
+**仅限 TRON。** GasFree 是 TRON 上的服务；本组每一条子命令在 EVM 网络上都会以 `family_mismatch` 失败。
 
 ## 用法
 
@@ -22,10 +24,10 @@ wallet-cli gasfree COMMAND
 
 - 每个账户都有一个**确定性派生出的 GasFree 地址**。资产在该地址上收取和支付——要通过 GasFree 收 USDT，就把你的 GasFree 地址（见 `gasfree info`）给付款方。
 - **首次**转账时，服务方会在链上激活这个 GasFree 地址，并在每笔转账服务费之外额外收取一次性的激活费。两笔费用都从 token 中扣除。
-- 签名按每个地址各自的 **`nonce`** 排序，以防重放。
+- 每个地址使用独立递增的 **`nonce`**，用于防止重放攻击。
 - 需要服务方的 **API 凭据**——用 [`config`](../config.md) 设置 `gasfreeApiKey` / `gasfreeApiSecret`。`--network` 用于选择服务环境（主网 / 测试网）。
 
-与 [`tx send`](../tx/send.md) 相比：`tx send` 在链上广播，会消耗带宽/能量或燃烧 TRX；`gasfree transfer` 走服务方的 API——不花 TRX，但每笔转账要付一笔以 token 计价的费用。手上有 TRX 或能量时，`tx send` 通常更便宜；`gasfree` 针对的是“完全没有 TRX”的情形。
+与 [`tx send`](../tx/send.md) 相比，`tx send` 直接向链上广播，会消耗带宽、能量或燃烧 TRX；`gasfree transfer` 通过服务方 API 提交，不消耗 TRX，但每笔转账都要支付以 token 计价的费用。账户拥有 TRX 或足够能量时，`tx send` 通常成本更低；`gasfree` 主要用于账户完全没有 TRX 的情况。
 
 ## 另请参见
 

@@ -5,7 +5,7 @@
 ## DeployContract
 
 ```console
-> DeployContract [ownerAddress] contractName ABI byteCode constructor params isHex fee_limit consume_user_resource_percent origin_energy_limit value token_value token_id(e.g: TRXTOKEN, use # if don't provided) <library:address,library:address,...> <lib_compiler_version(e.g:v5)> library:address,...>
+> DeployContract [ownerAddress] contractName ABI byteCode constructor params isHex fee_limit consume_user_resource_percent origin_energy_limit value token_value token_id(e.g: TRXTOKEN, use # if don't provided) <library:address,...> <lib_compiler_version(e.g:v5)>
 ```
 
 - `OwnerAddress`——发起交易的账户地址，可选，默认为登录账户的地址。
@@ -23,8 +23,7 @@
 示例：
 
 ```console
-> deployContract normalcontract544 [{"constant":false,"inputs":[{"name":"i","type":"uint256"}],"name": "findArgsByIndexTest","outputs":[{"name":"z","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"}]
-608060405234801561001057600080fd5b50610134806100206000396000f3006080604052600436106100405763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663329000b58114610045575b600080fd5b34801561005157600080fd5b5061005d60043561006f565b60408051918252519081900360200190f35b604080516003808252608082019092526000916060919060208201838038833901905050905060018160008151811015156100a657fe5b602090810290910101528051600290829060019081106100c257fe5b602090810290910101528051600390829060029081106100de57fe5b6020908102909101015280518190849081106100f657fe5b906020019060200201519150509190505600a165627a7a72305820b24fc247fdaf3644b3c4c94fcee380aa610ed83415061ff9e65d7fa94a5a50a00029 # # false 1000000000 75 50000 0 0 #
+> deployContract normalcontract544 [{"constant":false,"inputs":[{"name":"i","type":"uint256"}],"name": "findArgsByIndexTest","outputs":[{"name":"z","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"function"}] 608060405234801561001057600080fd5b50610134806100206000396000f3006080604052600436106100405763ffffffff7c0100000000000000000000000000000000000000000000000000000000600035041663329000b58114610045575b600080fd5b34801561005157600080fd5b5061005d60043561006f565b60408051918252519081900360200190f35b604080516003808252608082019092526000916060919060208201838038833901905050905060018160008151811015156100a657fe5b602090810290910101528051600290829060019081106100c257fe5b602090810290910101528051600390829060029081106100de57fe5b6020908102909101015280518190849081106100f657fe5b906020019060200201519150509190505600a165627a7a72305820b24fc247fdaf3644b3c4c94fcee380aa610ed83415061ff9e65d7fa94a5a50a00029 # # false 1000000000 75 50000 0 0 #
 ```
 
 用 `getTransactionInfoById` 命令获取合约执行结果：
@@ -74,20 +73,21 @@
 > TriggerContract [ownerAddress] contractAddress method args isHex fee_limit value token_value token_id
 ```
 
-- `OwnerAddress`——发起交易的账户地址，可选，默认为登录账户的地址。
+- `ownerAddress`——必填。传入 base58 地址，或传 `#` 表示使用当前登录账户。
 - `contractAddress`——智能合约地址。
 - `method`——函数名及参数；参见示例。
 - `args`——参数值；如果想调用 `receive`，请传 `#`。
 - `isHex`——参数 `method` 和 `args` 的格式；是否为十六进制字符串。
-- `fee_limit`——允许消耗的最多 TRX。
+- `value`——可选的调用金额，单位为 SUN；一旦传入，`token_value` 和 `token_id` 也必须一并传入。
 - `token_value`——TRC10 的数量。
 - `token_id`——TRC10 id；如果没有，使用 `#`。
+
+本命令只接受两种形式：不带 value / token 字段的 5 个参数，或带全部三个可选字段的 8 个参数。它不接受 `fee_limit`。
 
 示例：
 
 ```console
-> triggerContract TGdtALTPZ1FWQcc5MW7aK3o1ASaookkJxG findArgsByIndexTest(uint256) 0 false
-1000000000 0 0 #
+> triggerContract TGdtALTPZ1FWQcc5MW7aK3o1ASaookkJxG findArgsByIndexTest(uint256) 0 false 1000000000 0 0 #
 # 用 getTransactionInfoById 命令获取合约执行结果
 > getTransactionInfoById 7d9c4e765ea53cf6749d8a89ac07d577141b93f83adc4015f0b266d8f5c2dec4
 {
@@ -113,7 +113,7 @@
 ## TriggerConstantContract
 
 ```console
-> TriggerConstantContract [ownerAddress] contractAddress method args isHex fee_limit value token_value token_id
+> TriggerConstantContract ownerAddress contractAddress method args isHex [value token_value token_id]
 ```
 
 - `OwnerAddress`——发起交易的账户地址，可选，默认为登录账户的地址。
@@ -128,7 +128,7 @@
 示例：
 
 ```console
-> TriggerConstantContract TSNEe5Tf4rnc9zPMNXfaTF5fZfHDDH8oyW TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs "balanceOf(address)" 000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c true
+> TriggerConstantContract TSNEe5Tf4rnc9zPMNXfaTF5fZfHDDH8oyW TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs balanceOf(address) 000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c true
 ```
 
 ## ClearContractABI
@@ -243,7 +243,7 @@
 示例：
 
 ```console
-> EstimateEnergy TSNEe5Tf4rnc9zPMNXfaTF5fZfHDDH8oyW TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs "balanceOf(address)" 000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c true
+> EstimateEnergy TSNEe5Tf4rnc9zPMNXfaTF5fZfHDDH8oyW TG3XXyExBkPp9nzdajDZsozEu4BkaSJozs balanceOf(address) 000000000000000000000000a614f803b6fd780986a42c78ec9c7f77e6ded13c true
 ```
 
 ## 另请参见

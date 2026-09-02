@@ -16,7 +16,7 @@ wallet-cli address generate [--out <path>] [--print-secret]
 AI 会话中（与 [`backup`](../backup.md) 采用相同的保护方式）。使用 `--print-secret` 会改为将私钥输出到
 stdout，仅适合离线抄录；此时 text 输出会附带 `!` 警告。
 
-它产生的是一把裸私钥，适用于一次性地址、测试，或导入到其他系统。要创建普通账户——即 keystore 中带派生能力的 HD 钱包——请用 [`create`](../create.md)。要用生成的密钥签名，请用 [`import private-key`](../import/private-key.md) 导入它。
+该命令生成的是独立私钥，适用于一次性地址、测试或导入其他系统。要创建可继续派生账户的普通 HD 钱包，请使用 [`create`](../create.md)。如需使用生成的密钥签名，请通过 [`import private-key`](../import/private-key.md) 将其导入钱包。
 
 ## 选项
 
@@ -62,7 +62,7 @@ wallet-cli address generate -o json
 
 ## 退出码
 
-`0` 成功 · `1` 执行失败（`io_error`；`output_exists`——`--out` 目标已存在且绝不覆盖；`entropy_failure`——系统 CSPRNG 不可用） · `2` 用法错误（`invalid_value`）。
+`0` 成功 · `1` 执行失败（`io_error`；`entropy_failure`——系统 CSPRNG 不可用） · `2` 用法错误（`output_exists`——`--out` 目标已存在且绝不覆盖；`invalid_value`）。
 
 ## 另请参见
 
