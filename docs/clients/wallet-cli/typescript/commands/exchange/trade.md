@@ -26,18 +26,18 @@ wallet-cli exchange trade <id> --sell <TRX|asset-id>
 
 滑点会随着交易规模相对储备的比例上升而变大——这是曲线本身造成的，不是手续费；协议不抽成。用 [`exchange show`](show.md) 查看深度，用 `exchange trade --dry-run` 为某个具体数量定价。
 
-**只用 id 指代 token**——`TRX`（或它的链上 id `_`）以及数字形式的 TRC10 id；TRC10 名称可能含有 `:`。`--amount` 以卖出那一侧的完整 token 计，`--raw-amount` 以最小单位计；两者必须且只能给其中一个。
+**token 只能通过 ID 指定**：使用 `TRX`（或其链上 ID `_`）以及数字形式的 TRC10 ID，不接受可能包含 `:` 的 TRC10 名称。`--amount` 按卖出资产的完整 token 单位计，`--raw-amount` 按最小单位计；两者必须且只能指定一个。
 
 > **你所在的网络可能根本没有开放交易。** 在 TIP-836 加固提案（`getAllowHardenExchangeCalculation`）激活之前，`java-tron` 会直接拒绝 `ExchangeTransactionContract`——该参数在主网和 Nile 上都未设置，此时命令会以 `exchange_trading_disabled` 失败。[`exchange create`](create.md)、[`inject`](inject.md) 和 [`withdraw`](withdraw.md) 不受影响。
 
-**该命令默认在提交时返回**（`stage: "submitted"`），而不是确认时——加 `--wait` 可阻塞直到已确认/失败。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+**该命令默认在交易提交后返回**（`stage: "submitted"`），不会等待确认。使用 `--wait` 可阻塞至交易确认或失败。命令需要一个账户；仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回 `watch_only_no_signer`。
 
 ## 选项
 
 | 选项 | 说明 |
 |---|---|
-| `<id>` | **必填。** 交易对 id |
-| `--sell <TRX\|asset-id>` | **必填。** 你要卖出的那一侧；另一侧就是你收到的 |
+| `<id>` | **必填。** 交易对 ID |
+| `--sell <TRX\|asset-id>` | **必填。** 要卖出的资产；交易对中的另一种资产为买入资产 |
 | `--amount <n>` | 卖出数量，以完整 token 计，须 > 0。`--amount` / `--raw-amount` 二选一 |
 | `--raw-amount <n>` | 同一金额，以最小单位计。`--amount` / `--raw-amount` 二选一 |
 | `--min-received <n>` | 可接受的最低返还，以完整 token 计；低于它交易就会回滚。三个下限参数最多只能给一个 |
@@ -91,9 +91,9 @@ echo "$PW" | wallet-cli exchange trade 12 --sell TRX --amount 100 --slippage 1 -
 | 字段 | 类型 | 含义 |
 |---|---|---|
 | `exchangeId` / `pair` / `traderAddress` | number / string / string | 交易对，以及发起交易的账户 |
-| `soldTokenId` / `soldQuant` | string | 卖出的那一侧及其数量，以最小单位计 |
+| `soldTokenId` / `soldQuant` | string | 卖出资产及其数量，以最小单位计 |
 | `soldLabel` / `soldDecimals` | string / number | text 输出把该侧按完整 token 显示时所用的信息 |
-| `receivedTokenId` / `receivedLabel` / `receivedDecimals` | — | 收到那一侧对应的同样三个字段 |
+| `receivedTokenId` / `receivedLabel` / `receivedDecimals` | — | 买入资产对应的 ID、显示名称和精度 |
 | `estimatedReceivedQuant` | string | 构建时按 Bancor 曲线预测的返还量——仅供参考，始终存在 |
 | `receivedQuant` | string | 这笔交易实际换回的数量；**只有确认之后才有**，因为它只存在于交易回执中 |
 | `minReceivedQuant` | string | 真正上链的下限——你自己给的、由 `--slippage` 推算出来的，或者在没给下限时为 `"1"` |

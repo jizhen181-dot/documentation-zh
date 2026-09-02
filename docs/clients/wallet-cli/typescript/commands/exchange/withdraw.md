@@ -13,20 +13,20 @@ wallet-cli exchange withdraw <id> --token <TRX|asset-id>
 
 ## 说明
 
-[`exchange inject`](inject.md) 的镜像操作：你指定一侧及其金额，另一侧按当前储备比例跟随，两侧资金一并回到你的账户。只有交易对的创建者才能撤资。
+该命令与 [`exchange inject`](inject.md) 相反：指定一侧的撤出金额后，另一侧按当前储备比例计算，两种资产会一并转回账户。只有交易对创建者可以撤资。
 
 **无法被储备比例整除的金额会被拒绝。** 链上把一侧折算成另一侧时有精度要求——商必须精确到 0.01% 以内——不满足的金额会直接以 `precision_loss` 被拒，而不是四舍五入。请把金额调整成该比例能整除的数值再试。
 
-**只用 id 指代 token**——`TRX`（或它的链上 id `_`）以及数字形式的 TRC10 id；TRC10 名称可能含有 `:`。`--amount` 以你所指定那一侧的完整 token 计；`--raw-amount` 则以最小单位给出同样的数字。两者必须且只能给其中一个。
+**token 只能通过 ID 指定**：使用 `TRX`（或其链上 ID `_`）以及数字形式的 TRC10 ID，不接受可能包含 `:` 的 TRC10 名称。`--amount` 按所选资产的完整 token 单位计；`--raw-amount` 则直接使用最小单位。两者必须且只能指定一个。
 
-**该命令默认在提交时返回**（`stage: "submitted"`），而不是确认时——加 `--wait` 可阻塞直到已确认/失败。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+**该命令默认在交易提交后返回**（`stage: "submitted"`），不会等待确认。使用 `--wait` 可阻塞至交易确认或失败。命令需要一个账户；仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回 `watch_only_no_signer`。
 
 ## 选项
 
 | 选项 | 说明 |
 |---|---|
-| `<id>` | **必填。** 交易对 id |
-| `--token <TRX\|asset-id>` | **必填。** 你要指定的那一侧 |
+| `<id>` | **必填。** 交易对 ID |
+| `--token <TRX\|asset-id>` | **必填。** 用于指定撤出金额的资产 |
 | `--amount <n>` | 该侧的金额，以完整 token 计；另一侧按储备比例跟随。`--amount` / `--raw-amount` 二选一 |
 | `--raw-amount <n>` | 同一金额，以最小单位计。`--amount` / `--raw-amount` 二选一 |
 | `--dry-run` | 只构建和估算，不签名/不广播；与 `--sign-only` / `--build-only` 互斥 |
@@ -74,7 +74,7 @@ echo "$PW" | wallet-cli exchange withdraw 12 --token TRX --amount 1000 --network
 | 字段 | 类型 | 含义 |
 |---|---|---|
 | `exchangeId` / `pair` / `creatorAddress` | number / string / string | 交易对及其创建者 |
-| `tokenId` / `tokenQuant` | string | 你指定的那一侧，以及从中取回的金额，以最小单位计 |
+| `tokenId` / `tokenQuant` | string | 指定金额的资产及其撤出量，以最小单位计 |
 | `tokenLabel` / `tokenDecimals` | string / number | text 输出把该侧按完整 token 显示时所用的信息 |
 | `otherTokenId` / `otherTokenQuant` / `otherTokenLabel` / `otherTokenDecimals` | — | 按比例算出的另一侧对应的同样四个字段 |
 | `reserveAfter` / `otherReserveAfter` | string | 本次撤资之后交易对两侧的余额，顺序与上面一致 |

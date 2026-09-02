@@ -16,7 +16,7 @@ wallet-cli proposal approve <id> [--cancel]
 
 只有已注册的见证人才能批准；其他账户会以 `not_a_witness` 失败。链上除此之外不做任何检查，所以未当选候选人的批准同样会被接受并上链——但统计时只有**前 27 名活跃超级代表**的批准才计入阈值，因此这样的批准并不会让提案离通过更近一步。
 
-**该命令默认在提交时返回**（`stage: "submitted"`），而不是确认时——加 `--wait` 可阻塞直到已确认/失败。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+**该命令默认在交易提交后返回**（`stage: "submitted"`），不会等待确认。使用 `--wait` 可阻塞至交易确认或失败。命令需要一个账户；仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回 `watch_only_no_signer`。
 
 ## 选项
 

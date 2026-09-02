@@ -28,7 +28,7 @@ wallet-cli asset issue --name <name> --supply <n> --price <trx>:<tokens>
 
 以下条件会在广播前进行本地校验：`--name` 和 `--abbr` 必须由 1–32 个可见 ASCII 字符组成（`0x21`–`0x7E`，不能包含空格或非 ASCII 字符）；`--url` 必填且不超过 256 字节；`--description` 不超过 200 字节；`--precision` 为 0–6；`--start` 必须在未来，`--end` 必须晚于 `--start`；每个 `--freeze` 批次的金额和天数都必须大于零。命令还会预先读取账户状态；如果该账户已经发行过 TRC10，会在产生发行费用之前拒绝操作。其他边界由节点校验，包括冻结批次限制（`getMinFrozenSupplyTime`、`getMaxFrozenSupplyTime`、`getMaxFrozenSupplyNumber`，以及各批次总额与总供应量的关系）和免费带宽限额（`getOneDayNetLimit`）。违反任一限制时，节点会返回 `transaction_rejected` 及其原始错误信息。
 
-**该命令默认在提交时返回**（`stage: "submitted"`），而不是确认时——加 `--wait` 可阻塞直到已确认/失败。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+**该命令默认在交易提交后返回**（`stage: "submitted"`），不会等待确认。使用 `--wait` 可阻塞至交易确认或失败。命令需要一个账户；仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回 `watch_only_no_signer`。
 
 Ledger 的 TRON 应用无法对 TRC10 发行类合约签名。Ledger 账户可以做试运行或构建未签名的 hex，但签名模式会在与设备交互之前就以 `ledger_unsupported` 失败。
 

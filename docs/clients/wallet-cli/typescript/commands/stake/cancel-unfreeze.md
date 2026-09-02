@@ -13,7 +13,7 @@ wallet-cli stake cancel-unfreeze [--dry-run | (--sign-only | --build-only) [--ex
 
 取消**所有**仍处于等待期的解质押，把这些金额回滚为已质押状态——资源额度和投票权也随之恢复。这是全有或全无的操作：TRON 不支持按条目单独取消。已经到期的条目会在同一笔交易里一并提取到余额。
 
-**该命令默认在提交时返回**；`--wait` 会阻塞直到已确认。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+**该命令默认在交易提交后返回**；使用 `--wait` 可阻塞至交易确认。命令需要一个账户；仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回 `watch_only_no_signer`。
 
 Ledger 的 TRON 应用无法对 `CancelAllUnfreezeV2` 签名。Ledger 账户可以做试运行或构建，但签名模式会在与设备交互之前就以 `ledger_unsupported` 失败。
 

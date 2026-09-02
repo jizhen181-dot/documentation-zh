@@ -18,7 +18,7 @@ TRON 协议层的 Bancor 交易所。
 实际交易会改变曲线位置，交易量相对储备越大，滑点通常越高。这段差额就是滑点。[`exchange trade`](trade.md) 接受一个可选的下限（`--min-received`、`--raw-min-received` 或 `--slippage`）；三个都不给也是允许的，但会给出一条警告，并按协议最小值 `expected = 1` 提交，这实际上等于没有任何滑点保护。要估算特定数量的兑换结果，请基于当前储备执行
 `exchange trade --dry-run`。储备量还受链参数 `getExchangeBalanceLimit` 限制。
 
-**本组命令只用 id 指代 token**——`TRX` 或数字形式的 asset id，绝不接受 token 名称。交易对用冒号书写（`--pair TRX:1000123`、`--amounts 10000:500000`），而 TRC10 名称本身合法地允许包含冒号，若允许写名称就会让 `--pair` 产生歧义。用 [`asset info <name>`](../asset/info.md) 把名称解析成 id。
+**本组命令只通过 ID 指定 token**，即 `TRX` 或数字形式的 asset ID，不接受 token 名称。交易对使用冒号分隔（`--pair TRX:1000123`、`--amounts 10000:500000`）；由于 TRC10 名称本身可以包含冒号，允许使用名称会导致 `--pair` 产生歧义。可通过 [`asset info <name>`](../asset/info.md) 将名称解析为 ID。
 
 **仅限 TRON。** Bancor 交易所内置于 TRON 协议中；本组每一条子命令在 EVM 网络上都会以 `family_mismatch` 失败。
 

@@ -32,11 +32,13 @@ wallet-cli contract deploy (--artifact <path> | --code <hex> | --code-file <path
 
 **TRON 必须有 ABI。** 传 `--artifact` 或 `--abi`；两个都传是错误。`--abi` 仅限 TRON，且 ABI 中的 `constructor` 条目必须带有字符串形式的 `stateMutability`（`"nonpayable"` / `"payable"`）——`solc` 会输出它，但手工裁剪过的 ABI，或由 0.5 之前版本的 `solc` 生成的 ABI，可能没有。EVM 部署在类型来自 `--constructor-signature`、或参数本身自带类型时，不需要任何 ABI。
 
-执行模式与其他构建交易的写命令一致：`--dry-run` 预览，`--sign-only` 输出可交给 [`tx broadcast`](../tx/broadcast.md) 的已签名交易，`--build-only` 输出未签名的交易，默认在提交时返回，`--wait` 则阻塞到已确认/失败为止。
+执行模式与其他交易写入命令一致：`--dry-run` 用于预览，`--sign-only` 输出可交给 [`tx broadcast`](../tx/broadcast.md) 的已签名交易，`--build-only` 输出未签名交易。默认在交易提交后返回；`--wait` 则阻塞至交易确认或失败。
 
 费用相关的参数跟随链家族——`--fee-limit`（TRON，默认 `100000000` SUN），或 `--gas-limit` / `--max-fee` / `--priority-fee` / `--nonce`（EVM）。`--help` 会为每组打上标记，把其中一组用在另一个家族上会以 `invalid_option` 被拒绝。
 
-需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+命令需要一个账户。仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。
+`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回
+`watch_only_no_signer`。
 
 在 TRON 上，Ledger 应用无法对 `CreateSmartContract` 签名；Ledger 账户可以做试运行或构建，但签名模式会以 `ledger_unsupported` 失败。通过以太坊应用进行的 EVM 部署不受此限制。
 

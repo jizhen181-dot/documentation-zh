@@ -38,13 +38,13 @@ EVM 上未给出的值会从节点取得：gas 上限来自 `eth_estimateGas`（
 
 TRON 的多签用 `--permission-id` 选择签名所用的权限组，用 `--expiration` 延长联署人补签的时间窗口。
 
-**该命令默认在提交时返回**（`stage: "submitted"`），而不是确认时——加 `--wait` 可阻塞直到已确认/失败，或者轮询 [`tx status`](status.md)。
+**该命令默认在交易提交后返回**（`stage: "submitted"`），不会等待确认。可以使用 `--wait` 阻塞至交易确认或失败，也可以自行轮询 [`tx status`](status.md)。
 
 需要：
 
 ```text
-  只有当所选模式确实要签名时才需要 master password——此时请传 --password-stdin；其他模式不需要密码
-  一个账户——默认使用当前账户；可用 --account <accountId|label> 覆盖（或执行 `wallet-cli use <account>` 更改当前账户）
+  仅在需要签名的模式下提供 master password；此时请传 --password-stdin，其他模式无需密码
+  一个账户；默认使用当前账户，可用 --account <accountId|label> 覆盖（或执行 `wallet-cli use <account>` 更改当前账户）
 ```
 
 ## 选项

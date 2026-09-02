@@ -12,7 +12,7 @@ wallet-cli <command> -o json [--network <id|alias>] [--timeout <ms>] [--account 
 - 始终传 `-o json`。text 输出仅供人工阅读，不提供任何稳定性承诺。
 - 在 JSON 模式下，stdout **只输出一个完整的 JSON 响应对象**，不会混入其他内容；诊断信息写入 stderr。
 - 每次 RPC / 设备调用都受 `--timeout` 限制（毫秒，默认取 `config.timeoutMs`，内置默认值 60000）。
-- `--network` 接受规范的 **CAIP-2** id（`tron:3448148188`、`eip155:11155111`），或一个简短别名（`nile`、`sepolia`、`bsc`）。namespace 不等于链家族：`eip155` 指向的是 `evm` 家族。别名只在选择网络时解析一次，下游任何环节都看不到它，而响应中的 `chain.network` 始终报告规范 id。脚本中请优先使用规范 id——别名只是一条本地配置，可以被重新指向。
+- `--network` 接受规范的 **CAIP-2** ID（`tron:3448148188`、`eip155:11155111`），也接受简短别名（`nile`、`sepolia`、`bsc`）。namespace 不等于链家族：`eip155` 对应 `evm` 家族。别名只在选择网络时解析，响应中的 `chain.network` 始终返回规范 ID。脚本应优先使用规范 ID，因为本地配置可以将别名重新指向其他网络。
 - 本 CLI 在采用 CAIP-2 之前使用的 **TRON** id（`tron:mainnet`、`tron:nile`、`tron:shasta`）会永久保留为别名，因此原有调用方式仍然有效。但输出统一使用 CAIP-2 id：`chain.network`、`networks` 列表中的 `id` 和 `config` 的键均如此。依赖字符串匹配或使用 `tron:nile` 作为 map 键的调用方必须更新。别名只在选择网络时解析，不会出现在结果中。
 
 ### 能力发现
@@ -181,7 +181,7 @@ wallet-cli --json-schema | jq '.errorCodes'
 | `keystore_not_found` | `import keystore`：给定路径上没有文件 |
 | `migration_required` | 持久化的钱包数据需要升级，但本次调用因无法获得 master password 而不能完成升级——请在终端中重新运行，或用 `--password-stdin` 管道传入。参见[启动时的钱包数据升级](#startup-wallet-data-upgrades) |
 | `invalid_keystore` | `import keystore`：不是合法的 Web3 V3 keystore——JSON 有误、`version` ≠ 3、使用了不支持的 cipher/KDF，或解密结果不是 32 字节私钥 |
-| `invalid_config` | `config.yaml` 无法读取或不是合法的 YAML——请修复或删除该文件。解析器的具体细节被隐去：它会引用出错的那一行，而那行可能带有凭据 |
+| `invalid_config` | `config.yaml` 无法读取或不是合法的 YAML——请修复或删除该文件。具体解析错误会被隐藏，因为错误信息可能引用包含凭据的原始行 |
 | `insecure_config` | `config.yaml` 保存了服务凭据，但它是符号链接或对同组/所有人可读——请对它执行 `chmod 600`（仅 POSIX；Windows 上不强制） |
 | `contact_not_found` / `already_exists` | 不存在该名称的联系人，或该联系人名称/地址已被占用 |
 | `token_not_in_book` / `token_is_official` / `token_already_listed` | token 地址簿相关的状况 |
@@ -225,7 +225,7 @@ wallet-cli --json-schema | jq '.errorCodes'
 | `not_in_ico_window` / `self_participation` | TRC10 ICO 参与条件 |
 | `no_frozen_supply` / `not_yet_unfreezable` | 没有冻结的部分，或还没有到期的部分（`asset unfreeze`） |
 | `not_exchange_creator` / `token_not_in_exchange` / `exchange_closed` / `same_token` | 交易对的访问权限与状态条件 |
-| `insufficient_reserve` | `exchange withdraw`：超过了交易对那一侧所持有的量 |
+| `insufficient_reserve` | `exchange withdraw`：撤出量超过交易对对应一侧的储备 |
 | `precision_loss` / `slippage_exceeded` / `exchange_trading_disabled` | 根据有限白名单识别出的节点拒绝原因——金额无法按储备比例精确换算、回报低于下限，或该网络不接受 Bancor 交易 |
 | `not_exportable` | 该账户不持有可导出的密钥材料（仅观察或 Ledger）——`backup` |
 | `account_exists` / `wrong_keystore_password` | `import keystore`：该地址已在钱包中，或文件自身的密码不对（区别于 `auth_failed`，后者指的是 master password）。`mac` 缺失或不是 hex 的文件属于 `invalid_keystore`，而不是密码错误——hex 不区分大小写 |
@@ -256,7 +256,8 @@ wallet-cli 绝不从命令行参数或专用的敏感信息环境变量读取密
 1. **stdin 标志**——`--password-stdin` 用于 master password；`--tx-stdin` / `--message-stdin` 用于较大的载荷。**每次运行只能有一个 `*-stdin` 标志消费 stdin。**（助记词和私钥没有 stdin 路径——`import mnemonic` / `import private-key` / `change-password` 只能交互执行，使用隐藏的 TTY 输入。）
 2. **交互式 TTY 提示**——仅用于明确声明为交互式的命令：`create`、各种 `import`、`backup`、`change-password`，以及 `delete` 的确认。其他命令无论是否挂载终端，行为都相同：`tx send`、`contract *`、`stake *`、`message sign` 等命令不会主动提示；缺少 master password 时一律返回 `auth_required`（退出码 `1`）。
 
-示例中的 shell 变量只是 shell 一侧为管道准备的数据来源；wallet-cli 并不会去读它们。请让它们保持在进程内、生命周期尽量短，也不要长期 export。
+示例中的 shell 变量只是管道输入的数据来源，并非由 wallet-cli 主动读取。应将变量限制在当前进程中，
+尽量缩短其生命周期，避免长期 `export`。
 
 ```bash
 # 非交互式解锁
@@ -267,7 +268,7 @@ printf '%s' "$MASTER_PASSWORD_FROM_YOUR_VAULT" | wallet-cli tx send \
 
 ## 脚本安全：绝不要把"已提交"当作"已确认" {#script-safety-never-mistake-submitted-for-confirmed}
 
-这是一个钱包；成功判断写错就意味着丢钱。规则如下：
+错误判断交易是否成功可能造成资产损失。请遵循以下规则：
 
 1. 广播类（✍️）命令**默认在提交后就返回**，而不是等待确认。`data` 是一个扁平对象，其中包含表示操作类型的 `kind`（`send`、`stake-freeze`、`permission-update`、`account-activate`、`proposal-create`、`asset-issue`、`exchange-trade` 等）、`stage` 和 `txId`；`submitted` 阶段不包含区块、手续费或执行结果（这些字段只有在 `--wait` 确认后才会出现）：
 

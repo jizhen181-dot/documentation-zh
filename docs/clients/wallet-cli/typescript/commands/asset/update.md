@@ -17,9 +17,10 @@ wallet-cli asset update [--description <s>] [--url <url>]
 
 **永远只有四个字段可以修改**——描述、URL、每位持有人的免费带宽，以及共享的免费带宽池。供应量、精度、ICO 比率、ICO 窗口和冻结批次在发行时即固定，链上没有任何办法更改它们。
 
-只传你要修改的字段。其余字段会从链上读出后原样写回，因此不会被悄悄清空；但至少要给出一个字段。回执会展示这四个字段当前的值。
+只需传入要修改的字段，但至少要指定一个。其他字段会从链上读取并保持原值，不会被意外清空。回执会
+显示这四个字段更新后的值。
 
-**该命令默认在提交时返回**（`stage: "submitted"`），而不是确认时——加 `--wait` 可阻塞直到已确认/失败。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+**该命令默认在交易提交后返回**（`stage: "submitted"`），不会等待确认。使用 `--wait` 可阻塞至交易确认或失败。命令需要一个账户；仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回 `watch_only_no_signer`。
 
 Ledger 的 TRON 应用无法对 TRC10 发行类合约签名。Ledger 账户可以做试运行或构建未签名的 hex，但签名模式会在与设备交互之前就以 `ledger_unsupported` 失败。
 

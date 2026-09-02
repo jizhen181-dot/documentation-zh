@@ -20,7 +20,7 @@ wallet-cli vote cast --for <SR=votes> ... [--dry-run | (--sign-only | --build-on
 
 投票在下一个维护周期（约 6 小时）才生效。每一票占用 1 TP（是占用而非消耗——重新投票或解除质押都会把它释放出来）；可用 TP = 已质押的 TRX 减去已投出的票数（见 [`vote status`](status.md)）。
 
-**该命令默认在提交时返回**（`stage: "submitted"`），而不是确认时——加 `--wait` 可阻塞直到已确认/失败。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+**该命令默认在交易提交后返回**（`stage: "submitted"`），不会等待确认。使用 `--wait` 可阻塞至交易确认或失败。命令需要一个账户；仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回 `watch_only_no_signer`。
 
 ## 选项
 

@@ -22,9 +22,11 @@ wallet-cli contract send --contract <address> --method <sig> [--params <json>] [
 
 费用相关的参数跟随链家族——TRON 上是 `--fee-limit` / `--permission-id` / `--expiration`，EVM 上是 `--gas-limit` / `--max-fee` / `--priority-fee` / `--nonce`。`--help` 会为每组打上标记，把其中一组用在另一个家族上会以 `invalid_option` 被拒绝。
 
-**该命令默认在提交时返回**（`stage: "submitted"`）——加 `--wait` 可阻塞直到已确认/失败。使用 `--wait` 时，链上执行失败会以 `stage: "failed"` 返回——TRON 上在 `result` 中给出原因（`revert` / `OUT_OF_ENERGY`），EVM 上则以回执中的失败状态体现。
+**该命令默认在交易提交后返回**（`stage: "submitted"`），不会等待确认。使用 `--wait` 可阻塞至交易确认或失败。链上执行失败时返回 `stage: "failed"`：TRON 会在 `result` 中给出原因（`revert` / `OUT_OF_ENERGY`），EVM 则通过回执中的失败状态表示。
 
-需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+命令需要一个账户。仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。
+`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回
+`watch_only_no_signer`。
 
 ## 选项
 

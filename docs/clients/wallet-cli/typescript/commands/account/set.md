@@ -16,7 +16,9 @@ wallet-cli account set (--name <name> | --id <account-id>)
 
 ⚠️ **两者各自只能设置一次，且永远无法更改**——该值是永久性的，写入前也不会再次提示确认。这项规则适用于所有网络，包括 Nile 和 Shasta；第二次写入会返回 `name_already_set` / `id_already_set`。因此，即使在测试网上也不能把该操作当作可重复的演练。这与 [`rename`](../rename.md) 不同，后者只修改本地标签，可以随时再次更改。
 
-需要该账户。只有当所选模式确实要签名时才需要通过 `--password-stdin` 传入 master password——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。账户 id 的唯一性由链上强制——已被占用的 id 会以 `id_taken` 失败。
+命令需要所修改的账户。仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。
+`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回
+`watch_only_no_signer`。账户 ID 的唯一性由链上保证；ID 已被占用时返回 `id_taken`。
 
 Ledger 的支持情况因字段而异：TRON 应用可以对 `--name` 签名，但无法对 `--id`（`SetAccountIdContract`）签名。Ledger 账户仍可对这两个字段做构建或试运行；但带 `--id` 的签名模式会在与设备交互之前就以 `ledger_unsupported` 失败。
 

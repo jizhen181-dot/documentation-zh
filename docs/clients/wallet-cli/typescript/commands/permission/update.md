@@ -23,7 +23,7 @@ CLI 会在构建交易前严格校验权限结构，不符合规则时返回用�
 `invalid_permission` 被拒绝（`owner.threshold exceeds the total key weight`）。阈值和权重采用无损解析，
 超出安全整数范围的值会被拒绝，不会进行舍入。
 
-**编辑导出的结构。** `permission show -o json` 会为每个 active 组同时输出 `operations`（合约类型名）和 `operationsHex`（原始位图）。两者可以都提供，但必须**一致**——同一个组出现两种互相矛盾的描述，就意味着你审阅过的结构并不是最终上链的结构，因此这种不一致会被拒绝。改完 `operations` 之后，请删掉该组的 `operationsHex`，CLI 会重新生成它：
+**编辑导出的结构。** `permission show -o json` 会为每个 active 组同时输出 `operations`（合约类型名）和 `operationsHex`（原始位图）。可以同时提供两者，但内容必须**一致**；如果同一权限组的两种表示相互矛盾，CLI 会拒绝输入，避免实际上链结构与已审核内容不一致。修改 `operations` 后，请删除该组原有的 `operationsHex`，CLI 会重新生成位图：
 
 ```bash
 wallet-cli permission show -o json --network tron:3448148188 | jq '.data' > perms.json
@@ -36,7 +36,7 @@ wallet-cli permission show -o json --network tron:3448148188 | jq '.data' > perm
 
 - **账户锁定风险**——当本地可签名的 owner 密钥（软件账户 / Ledger）权重之和低于新的 owner 阈值时，stderr 会输出一行 `warning:`，说明本地密钥已无法独立满足该阈值。完全没有权重时警告码为 `owner_lockout`；需要其他联署人才能满足阈值时为 `owner_lockout_partial`。多方托管本就可能要求联署，因此该检查只发出警告，不会阻止提交。
 - **危险操作**——当某个 active 组包含 `Update Account Permissions` 时（该组因此能够修改权限本身，实际等同于 owner 级别），会在 stderr 上输出一行 `warning:` 予以标记（`active_can_update_permission`）。
-- **无法识别的操作**——当某个 active 位图授予了本版本无法命名的合约类型 id 时，这些 id 会被原样保留，并以 `active_unknown_operations` 报出，而不是被悄悄丢弃。
+- **无法识别的操作**——当某个 active 位图包含当前版本无法命名的合约类型 ID 时，这些 ID 会保留在结果中，并产生 `active_unknown_operations` 警告，不会被自动删除。
 
 ## 选项
 

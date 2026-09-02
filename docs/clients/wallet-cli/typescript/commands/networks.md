@@ -12,7 +12,7 @@ wallet-cli networks [options]
 
 列出 wallet-cli 已知的每一个网络，以及 `--network` 同样接受的简短别名。纯本地操作——不访问任何节点。
 
-**Network** 是规范的 CAIP-2 id，形如 `namespace:reference`；**Alias** 则是你可以改写的简称。两者解析到同一个网络，而且下游任何环节都看不到别名。CAIP-2 之前使用的那批 TRON id（`tron:mainnet`、`tron:nile`、`tron:shasta`）也仍然可以解析，它们是永久别名。
+**Network** 是规范的 CAIP-2 ID，格式为 `namespace:reference`；**Alias** 是可修改的简称。两者可以指向同一个网络，但别名只在选择网络时参与解析，不会出现在后续结果中。采用 CAIP-2 之前使用的 TRON ID（`tron:mainnet`、`tron:nile`、`tron:shasta`）仍可使用，并会永久保留为别名。
 
 端点只显示**主机名**。商用 RPC 端点可能把 API key 放在 URL 路径里，而这份列表正是人们会粘贴到 issue 和 CI 日志里的输出；要读取完整 URL，请用 `config networks.<id>.httpEndpoint`——那是一次刻意的指名读取，而不是列表。
 

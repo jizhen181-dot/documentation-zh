@@ -28,7 +28,7 @@ wallet-cli networks
 | `eip155:56` | `bsc` | BNB Smart Chain | **真实资金** |
 | `eip155:97` | `bsc-testnet` | BNB Smart Chain 测试网 | 无 |
 
-**别名**是你可以用来代替 id 输入的简称。它只在选择网络的那一刻解析一次，下游任何环节都看不到它——JSON 响应中的 `chain.network` 始终报告规范 id。别名保存在配置里、可以被重新指向，因此脚本应当传规范 id。
+**别名**是可以代替规范 ID 输入的简称，只在选择网络时解析一次。后续处理不会保留别名，JSON 响应中的 `chain.network` 始终返回规范 ID。由于配置中的别名可以重新指向其他网络，脚本应直接使用规范 ID。
 
 对于每个内置网络，**chain id** 都是规范 id 的第二段，无论属于哪个家族。`chainId` 是独立配置的字段，并非根据规范 id 推导；在 `config.yaml` 中新增网络时，需要自行确保两者一致。EVM 的 chain id 是签名所覆盖的 EIP-155 数字（如 `56`）；TRON 的 chain id 是创世块哈希前缀的十进制表示（如 `3448148188`），目前仅用于显示。TRON 网络便于阅读的名称由别名提供（如 `nile`），不存储在 `chainId` 中。
 

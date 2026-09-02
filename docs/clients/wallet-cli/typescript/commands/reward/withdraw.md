@@ -15,7 +15,7 @@ wallet-cli reward withdraw [--dry-run | (--sign-only | --build-only) [--expirati
 
 回执中的 `Amount`：在 `submitted` 阶段，它是广播时读取到的可领取金额；`--wait` 得到的已确认回执显示的则是链上的实际金额（两者只差几秒钟的累积量——可以忽略）。
 
-**该命令默认在提交时返回**；`--wait` 会阻塞直到已确认。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+**该命令默认在交易提交后返回**；使用 `--wait` 可阻塞至交易确认。命令需要一个账户；仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回 `watch_only_no_signer`。
 
 ## 选项
 

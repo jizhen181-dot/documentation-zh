@@ -13,22 +13,22 @@ wallet-cli exchange inject <id> --token <TRX|asset-id>
 
 ## 说明
 
-**注资是双边的。** 你只指定其中一侧及其金额；链会按当前储备比例算出另一侧，并把它一并扣除。因此在一个持有 10,000 TRX 和 500,000 个 token 的交易对上执行 `--token TRX --amount 1000`，还会同时扣走 50,000 个 token——你需要**两侧都有足够余额**，而不只是你指定的那一侧。
+**注资需要同时提供两侧资产。** 命令只要求指定一侧及其金额，链会按当前储备比例计算另一侧并同时扣除。例如，某交易对储备为 10,000 TRX 和 500,000 个 token，执行 `--token TRX --amount 1000` 时还会扣除 50,000 个 token。因此，账户必须**同时拥有足够的两侧资产**。
 
 只有交易对的创建者才能注资；其他任何账户都会以 `not_exchange_creator` 失败。
 
 如果金额小到算出的另一侧取整后为零，链会拒绝这笔交易。这种情况会在本地对照当前储备提前拦下，不会广播出去。
 
-**只用 id 指代 token**——`TRX`（或它的链上 id `_`）以及数字形式的 TRC10 id；TRC10 名称可能含有 `:`。`--amount` 以你所指定那一侧的完整 token 计，并按该侧的精度换算；`--raw-amount` 则以最小单位给出同样的数字。两者必须且只能给其中一个。
+**token 只能通过 ID 指定**：使用 `TRX`（或其链上 ID `_`）以及数字形式的 TRC10 ID，不接受可能包含 `:` 的 TRC10 名称。`--amount` 按所选资产的完整 token 单位计，并依据其精度换算；`--raw-amount` 则直接使用最小单位。两者必须且只能指定一个。
 
-**该命令默认在提交时返回**（`stage: "submitted"`），而不是确认时——加 `--wait` 可阻塞直到已确认/失败。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+**该命令默认在交易提交后返回**（`stage: "submitted"`），不会等待确认。使用 `--wait` 可阻塞至交易确认或失败。命令需要一个账户；仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回 `watch_only_no_signer`。
 
 ## 选项
 
 | 选项 | 说明 |
 |---|---|
-| `<id>` | **必填。** 交易对 id |
-| `--token <TRX\|asset-id>` | **必填。** 你要指定的那一侧 |
+| `<id>` | **必填。** 交易对 ID |
+| `--token <TRX\|asset-id>` | **必填。** 用于指定注资金额的资产 |
 | `--amount <n>` | 该侧的金额，以完整 token 计；另一侧按储备比例跟随。`--amount` / `--raw-amount` 二选一 |
 | `--raw-amount <n>` | 同一金额，以最小单位计。`--amount` / `--raw-amount` 二选一 |
 | `--dry-run` | 只构建和估算，不签名/不广播；与 `--sign-only` / `--build-only` 互斥 |
@@ -71,12 +71,12 @@ echo "$PW" | wallet-cli exchange inject 12 --token TRX --amount 1000 --network t
 
 ## 输出 {#output}
 
-`data` 是扁平结构——你指定的那一侧、随之跟随的另一侧，以及此后两侧的储备：
+`data` 为扁平结构，包含指定金额的一侧、按比例计算的另一侧，以及注资后两侧的储备：
 
 | 字段 | 类型 | 含义 |
 |---|---|---|
 | `exchangeId` / `pair` / `creatorAddress` | number / string / string | 交易对及其创建者 |
-| `tokenId` / `tokenQuant` | string | 你指定的那一侧，以及从中扣除的金额，以最小单位计 |
+| `tokenId` / `tokenQuant` | string | 指定金额的资产及其扣除量，以最小单位计 |
 | `tokenLabel` / `tokenDecimals` | string / number | text 输出把该侧按完整 token 显示时所用的信息 |
 | `otherTokenId` / `otherTokenQuant` / `otherTokenLabel` / `otherTokenDecimals` | — | 按比例算出的另一侧对应的同样四个字段 |
 | `reserveAfter` / `otherReserveAfter` | string | 本次注资之后交易对两侧的余额，顺序与上面一致 |

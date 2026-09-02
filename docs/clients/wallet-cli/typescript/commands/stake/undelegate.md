@@ -16,7 +16,7 @@ wallet-cli stake undelegate --receiver <address> --amount-sun <n>
 
 收回是即时的（没有等待期——TRX 一直处于质押状态，移动的只是资源）。
 
-**该命令默认在提交时返回**；`--wait` 会阻塞直到已确认。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+**该命令默认在交易提交后返回**；使用 `--wait` 可阻塞至交易确认。命令需要一个账户；仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回 `watch_only_no_signer`。
 
 ## 选项
 

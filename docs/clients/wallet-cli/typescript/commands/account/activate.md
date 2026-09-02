@@ -16,7 +16,9 @@ wallet-cli account activate --address <T...>
 
 只有在地址需要独立存在于链上，以便接受查询或自行发起交易时，才需要使用本命令。如果本来就要向该地址转账，[`tx send`](../tx/send.md) 会在转账过程中自动激活收款方；将地址加入多签权限则**不需要**激活。
 
-需要付款账户。只有当所选模式确实要签名时才需要通过 `--password-stdin` 传入 master password——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+命令需要一个付款账户。仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。
+`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回
+`watch_only_no_signer`。
 
 Ledger 的 TRON 应用无法对 `AccountCreateContract` 签名：Ledger 账户可以使用 `--dry-run` 或 `--build-only`，但 `--sign-only`、默认提交和 `--wait` 会在与设备交互之前就以 `ledger_unsupported` 失败。
 

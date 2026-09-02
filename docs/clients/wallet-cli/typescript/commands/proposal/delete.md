@@ -14,11 +14,11 @@ wallet-cli proposal delete <id>
 
 撤回提案本身。只有创建者能这么做，而且只能在提案仍处于投票窗口内时进行；此后提案已完成统计，成为终态。
 
-这和 [`proposal approve --cancel`](approve.md) 是两回事，后者撤回的是单个批准。回执上也写得很清楚：这里是 `Proposal deleted`，那里是 `Approval canceled`。
+该操作不同于 [`proposal approve --cancel`](approve.md)：前者删除提案，后者只撤销一项批准。两者的回执分别显示 `Proposal deleted` 和 `Approval canceled`。
 
 链上将删除后的状态记为 `canceled`；操作成功后，[`proposal show`](show.md) 会显示 `State canceled`。
 
-**该命令默认在提交时返回**（`stage: "submitted"`），而不是确认时——加 `--wait` 可阻塞直到已确认/失败。需要一个账户。只有会签名的模式才需要 master password（通过 `--password-stdin`）——`--dry-run` 和 `--build-only` 不会解锁钱包，无需密码即可运行。在签名模式下，仅观察账户会以 `watch_only_no_signer` 失败。
+**该命令默认在交易提交后返回**（`stage: "submitted"`），不会等待确认。使用 `--wait` 可阻塞至交易确认或失败。命令需要一个账户；仅在需要签名的模式下，才必须通过 `--password-stdin` 提供 master password。`--dry-run` 和 `--build-only` 不会解锁钱包，因此无需密码。仅观察账户无法签名，会返回 `watch_only_no_signer`。
 
 ## 选项
 

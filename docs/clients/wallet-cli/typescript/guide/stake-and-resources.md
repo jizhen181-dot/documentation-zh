@@ -25,7 +25,7 @@ Created      2026-06-30
 Permissions  owner 1-of-1, 1 active group
 ```
 
-普通 TRX 转账消耗**带宽**；智能合约调用（包括 TRC20 转账）消耗**能量**。每个已激活的账户都会获得一小份免费带宽额度（这里是 `0 / 600`）。而能量只能来自质押——这个账户显示 `0 / 888`，是因为它已经为能量质押了 12 TRX（见 `Staked` 那一行）；如果什么都没质押，能量就是 `0`。当某种资源用尽时，节点会从你的余额中燃烧 TRX 来补足缺口——质押正是为了避免这种情况。
+普通 TRX 转账消耗**带宽**，智能合约调用（包括 TRC20 转账）消耗**能量**。每个已激活账户都有少量免费带宽额度，示例中为 `0 / 600`。能量则只能通过质押获得；示例账户为能量质押了 12 TRX，因此显示 `0 / 888`（见 `Staked` 行），未质押时能量上限为 `0`。资源不足时，节点会从账户余额中燃烧 TRX 补足差额；质押可以减少这部分支出。
 
 ## 2. 质押并选择资源类型
 
@@ -35,7 +35,7 @@ Permissions  owner 1-of-1, 1 active group
 wallet-cli stake freeze --amount-sun 100000000 --resource energy --network tron:3448148188
 ```
 
-`--resource` 决定这笔质押产出哪种资源。它默认为 `bandwidth`；如果你打算发送 TRC20 token 或调用合约，就该质押 `energy`，因为这些操作消耗能量（如第 1 步所示）。TRX 依然是你的——它只是被锁定，而不是被花掉——质押还会带来 TRON Power（治理投票权）。和 stake 组其他写操作命令一样，`stake freeze` 支持 `--dry-run`、`--sign-only`、`--build-only`、`--wait`，并且默认在提交时就返回。
+`--resource` 决定质押所产生的资源类型，默认值为 `bandwidth`。发送 TRC20 token 或调用合约会消耗能量，因此这类用途应选择 `energy`（见第 1 步）。质押的 TRX 仍归账户所有，只是暂时锁定；同时还会获得 TRON Power（治理投票权）。与 stake 组的其他写操作一样，`stake freeze` 支持 `--dry-run`、`--sign-only`、`--build-only` 和 `--wait`，默认在交易提交后返回。
 
 再次运行 `account info` 验证结果，`Energy` 上限会反映新增的质押：
 
@@ -51,7 +51,7 @@ wallet-cli account info --network tron:3448148188
 wallet-cli stake delegate --amount-sun 50000000 --resource energy --receiver TGkbaCYB4kRBc3Q6wjqkACefUvRwf2KzkH --network tron:3448148188
 ```
 
-默认情况下你可以随时收回一笔代理。加上 `--lock` 会在锁定期结束前禁止收回——用 `--lock-period <blocks>` 设置锁定期长度（每个区块约 3 秒）。代理之后，可以随时用 [`stake delegated`](../commands/stake/delegated.md) 查看当前的代理情况以及你最多可以代理多少。要在之后收回资源，用相反的命令 `stake undelegate`，并保持数量、接收方和资源类型一致：
+默认情况下，代理资源可以随时收回。添加 `--lock` 后，在锁定期结束前无法收回；锁定时长通过 `--lock-period <blocks>` 设置，每个区块约 3 秒。完成代理后，可以使用 [`stake delegated`](../commands/stake/delegated.md) 查看当前代理关系和最大可代理量。收回资源时使用 `stake undelegate`，并指定相同的数量、接收方和资源类型：
 
 ```bash
 wallet-cli stake undelegate --amount-sun 50000000 --resource energy --receiver TGkbaCYB4kRBc3Q6wjqkACefUvRwf2KzkH --network tron:3448148188
