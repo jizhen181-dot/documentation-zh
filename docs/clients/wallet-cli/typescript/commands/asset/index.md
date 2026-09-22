@@ -16,7 +16,7 @@ TRC10 是 TRON 的**链原生** token 标准，发行、ICO 销售和供应量�
 
 **仅限 TRON。** TRC10 是 TRON 的协议特性，EVM 上没有对应物；本组每一条子命令在 EVM 网络上都会以 `family_mismatch` 失败。
 
-命令行和 text 输出中的金额以**完整 token** 计；json 携带链上的原始值（完整 token × 10^precision）。
+> **仅限 TRON。** 本组的每条命令实现的都是 TRON 独有的协议特性，EVM 上没有对应物；在 EVM 网络上，它们会在任何节点调用之前就以 `family_mismatch` 失败。
 
 ## 用法
 
