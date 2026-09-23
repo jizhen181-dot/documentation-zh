@@ -357,11 +357,11 @@ printf '%s' "$MASTER_PASSWORD_FROM_YOUR_VAULT" | wallet-cli tx send \
    | `pending` | 节点已看到，但尚无执行结果 / 回执 | 否——继续轮询 |
    | `not_found` | 所查询的端点不认识它 | 否——继续轮询并对账；不要臆断为失败 |
 
+   `data.confirmed` 和 `data.failed` 以布尔值提供，便于直接分支。
+
    > `confirmed` 表示已入块并取得回执，不表示已最终确定。当这个区别重要时，请另行验证——TRON 上查询 SolidityNode 视图，EVM 上检查 finalized 区块。
 
-   > `confirmed` 表示「已入块且已拿到回执」，而不是最终性。若这一区别对你的流程重要，请用 TRON 的 SolidityNode 视图或 EVM 的 finalized 区块检查另行核验。
-
-   `data.confirmed` 和 `data.failed` 以布尔值提供，便于直接分支。
+   > 如果截止时间到达时状态仍为 `pending` 或 `not_found`，交易结果仍然未知。不要将其记录为失败；在通过外部方式对账之前，不要自动重发。
 
    **GasFree 转账是个例外。** `gasfree transfer` 提交给的是一个服务提供方，而不是直接提交给节点：提交回执中带的是 `traceId`（而不是 `txId`），进度遵循提供方的状态——`WAITING` → `INPROGRESS` → `CONFIRMING` → `SUCCEED` / `FAILED`。请用 `--wait` 或 [`gasfree trace <traceId>`](commands/gasfree/trace.md) 跟踪它，而不是 `tx status`；`txId` 只有在提供方把它送上链之后才会出现。
 
@@ -410,7 +410,7 @@ exit 1
 - 0/1/2 的退出码映射；
 - JSON 模式下 stdout 只输出一个完整 JSON 对象的约定；
 - 已有的 `error.code` 取值保持其含义（可能新增 code）；
-- 规范命令 id 和网络 id（`tron:728126428`、`tron:3448148188`、`tron:2494104990`、`eip155:1`、`eip155:56`、`eip155:11155111`、`eip155:97`）。
+- 规范命令 id 和网络 id（`tron:728126428`、`tron:3448148188`、`tron:2494104990`、`eip155:1`、`eip155:56`、`eip155:11155111`、`eip155:97`、`eip155:8453`、`eip155:84532`）。
 
 网络**别名**属于配置，不属于接口约定：它们可以在本地被重新指向，因此脚本应当传规范 id。
 
